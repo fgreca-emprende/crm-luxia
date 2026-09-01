@@ -1,0 +1,201 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # 1. POSTGRESQL ENGINE (con pgvector, pg_cron, pg_trgm y extensiones)
+  # ============================================================================
+  supabase-db:
+    image: supabase/postgres:15.6.1.139
+    container_name: crm-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./volumes/db/data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - crm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # 2. SUPABASE AUTH (GoTrue - Autenticación JWT y OAuth)
+  # ============================================================================
+  supabase-auth:
+    image: supabase/gotrue:v2.158.1
+    container_name: crm-auth
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/${POSTGRES_DB:-postgres}?sslmode=disable
+      GOTRUE_SITE_URL: http://localhost:5173
+      GOTRUE_URI_ALLOW_LIST: "*"
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true" # Autoconfirmar emails para agilidad en local
+    networks:
+      - crm-network
+
+  # ============================================================================
+  # 3. POSTGREST (Generación de API REST automática sobre PostgreSQL con RLS)
+  # ============================================================================
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.2
+    container_name: crm-rest
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/${POSTGRES_DB:-postgres}?sslmode=disable
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    networks:
+      - crm-network
+
+  # ============================================================================
+  # 4. SUPABASE REALTIME (Motor de WebSockets para CDC y Presence)
+  # ============================================================================
+  supabase-realtime:
+    image: supabase/realtime:v2.30.23
+    container_name: crm-realtime
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      DB_HOST: supabase-db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-postgres}
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_SSL: "false"
+      JWT_SECRET: ${JWT_SECRET}
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 100
+      SECURE_CHANNELS: "true"
+    networks:
+      - crm-network
+
+  # ============================================================================
+  # 5. SUPABASE STORAGE (Almacenamiento local de archivos y PDFs)
+  # ============================================================================
+  supabase-storage:
+    image: supabase/storage-api:v1.0.6
+    container_name: crm-storage
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      supabase-rest:
+        condition: service_started
+    restart: unless-stopped
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://supabase-rest:3000
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/${POSTGRES_DB:-postgres}?sslmode=disable
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      STORAGE_BACKEND: file
+      FILE_SIZE_LIMIT: 52428800 # 50MB por archivo
+    volumes:
+      - ./volumes/storage:/var/lib/storage
+    networks:
+      - crm-network
+
+  # ============================================================================
+  # 6. KONG API GATEWAY (Punto de entrada unificado en puerto 8000)
+  # ============================================================================
+  supabase-kong:
+    image: kong:2.8.1
+    container_name: crm-kong
+    depends_on:
+      - supabase-auth
+      - supabase-rest
+      - supabase-realtime
+      - supabase-storage
+    restart: unless-stopped
+    ports:
+      - "${KONG_HTTP_PORT:-8000}:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+    volumes:
+      - ./volumes/kong/kong.yml:/var/lib/kong/kong.yml:ro
+    networks:
+      - crm-network
+
+  # ============================================================================
+  # 7. SUPABASE STUDIO (Consola de Administración Web en puerto 3000)
+  # ============================================================================
+  supabase-studio:
+    image: supabase/studio:20240429-b68e918
+    container_name: crm-studio
+    restart: unless-stopped
+    ports:
+      - "${STUDIO_PORT:-3000}:3000"
+    environment:
+      STUDIO_PG_META_URL: http://supabase-kong:8000/pg
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DEFAULT_ORGANIZATION_NAME: Luxia Enterprise
+      DEFAULT_PROJECT_NAME: CRM Luxia Local
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_PUBLIC_URL: http://localhost:${KONG_HTTP_PORT:-8000}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    networks:
+      - crm-network
+
+  # ============================================================================
+  # 8. CRM BACKEND SERVICE & WORKER (Node.js - Sentinel IA, Triggers & Crons)
+  # ============================================================================
+  crm-backend:
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile
+    container_name: crm-backend-worker
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      supabase-kong:
+        condition: service_started
+    restart: unless-stopped
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 4000
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GMAIL_CLIENT_ID: ${GMAIL_CLIENT_ID}
+      GMAIL_CLIENT_SECRET: ${GMAIL_CLIENT_SECRET}
+      HUBSPOT_CLIENT_SECRET: ${HUBSPOT_CLIENT_SECRET}
+    networks:
+      - crm-network
+
+networks:
+  crm-network:
+    name: crm-network
+    driver: bridge

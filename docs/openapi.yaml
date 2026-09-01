@@ -1,0 +1,168 @@
+openapi: 3.0.0
+info:
+  title: Luxia CRM API
+  description: API Gateway para integraciones M2M bidireccionales con el CRM Empresarial de Luxia.
+  version: 1.0.0
+servers:
+  - url: https://us-central1-tu-proyecto-firebase.cloudfunctions.net/api
+    description: Production Server (Firebase Cloud Functions)
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Clave de API estática proporcionada por los administradores del CRM.
+
+  schemas:
+    Cliente:
+      type: object
+      required:
+        - nombreEmpresa
+      properties:
+        id:
+          type: string
+          description: ID único del cliente. Si no se provee al crear, se generará uno automáticamente.
+        nombreEmpresa:
+          type: string
+          description: Razón social o nombre comercial de la empresa.
+        estado:
+          type: string
+          description: Estado del ciclo de vida (ej. Lead API, Onboarding, Activo).
+          default: Lead API
+        observaciones:
+          type: string
+          description: Notas adicionales sobre el cliente.
+
+    Lead:
+      type: object
+      required:
+        - nombreContacto
+        - correo
+        - nombreEmpresa
+      properties:
+        nombreContacto:
+          type: string
+          description: Nombre de la persona de contacto.
+        correo:
+          type: string
+          description: Correo electrónico del prospecto.
+        telefono:
+          type: string
+          description: Teléfono de contacto.
+        nombreEmpresa:
+          type: string
+          description: Nombre comercial de la empresa prospecto.
+        pais:
+          type: string
+          description: Código del país (PE, MX, CO, CL, AR). Se normaliza automáticamente a formato estándar ISO 3166-1 alpha-2.
+        origen:
+          type: string
+          description: Canal de procedencia del lead (web, linkedin, etc.).
+        notas:
+          type: string
+          description: Comentarios o notas iniciales del prospecto.
+        camposDinamicos:
+          type: object
+          description: Campos personalizados definidos dinámicamente.
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        error:
+          type: string
+        message:
+          type: string
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /v1/clientes:
+    get:
+      summary: Obtener lista de clientes
+      description: Devuelve un listado de clientes paginado.
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+          description: Número máximo de resultados a devolver.
+      responses:
+        '200':
+          description: Lista de clientes obtenida con éxito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: No autorizado. Falla el API Key.
+    
+    post:
+      summary: Crear o actualizar un cliente
+      description: Ingresa un nuevo cliente al CRM o actualiza uno existente si se provee el `id`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cliente'
+      responses:
+        '201':
+          description: Cliente procesado correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Faltan campos requeridos.
+        '403':
+          description: Prohibido. El API Key no tiene permisos de escritura ('write').
+
+  /v1/clientes/{id}:
+    get:
+      summary: Obtener un cliente específico
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del cliente.
+      responses:
+        '200':
+          description: Cliente encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Cliente no encontrado.
+
+  /v1/leads:
+    post:
+      summary: Ingestar un nuevo prospecto (lead)
+      description: Registra un prospecto comercial en el CRM, realiza ruteo automático territorial (Territorial Round-Robin) y califica de forma reactiva con Sentinel IA.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Lead'
+      responses:
+        '201':
+          description: Prospecto creado e ingestado con éxito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Faltan campos requeridos o malformados.
+        '403':
+          description: Prohibido. El API Key no cuenta con privilegios de escritura ('write').
