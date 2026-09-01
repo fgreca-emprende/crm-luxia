@@ -313,4 +313,80 @@ router.post('/exportar-datos', requireAuth, async (req, res) => {
   });
 });
 
+// ============================================================================
+// 6. INVITACIÓN / CREACIÓN SEGURA DE USUARIOS (Supabase Admin Auth)
+// ============================================================================
+router.post('/usuarios/invitar', requireAuth, async (req, res) => {
+  const { email, rol, equipo } = req.body;
+  const supabase = req.app.get('supabase');
+  const requestingUser = req.user;
+
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ error: 'Correo electrónico válido es requerido.' });
+  }
+
+  // Verificar que el usuario solicitante sea admin/superadmin
+  const { data: requesterProfile } = await supabase
+    .from('usuarios')
+    .select('rol')
+    .eq('id', requestingUser.id)
+    .single();
+
+  if (!requesterProfile || !['admin', 'superadmin'].includes(requesterProfile.rol)) {
+    return res.status(403).json({ error: 'No tienes permisos de administrador para invitar usuarios.' });
+  }
+
+  try {
+    // 1. Crear o invitar usuario en Supabase Auth usando Service Role
+    const emailClean = email.trim().toLowerCase();
+    const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+      email: emailClean,
+      email_confirm: true,
+      user_metadata: { rol: rol || 'agente', equipo: equipo || 'Global' }
+    });
+
+    let targetUserId = authData?.user?.id;
+
+    if (authErr) {
+      // Si el usuario ya existe en auth.users, buscar su ID
+      if (authErr.message && authErr.message.includes('already been registered')) {
+        const { data: existingUsers } = await supabase.auth.admin.listUsers();
+        const found = (existingUsers?.users || []).find(u => u.email === emailClean);
+        if (found) targetUserId = found.id;
+      } else {
+        throw authErr;
+      }
+    }
+
+    if (!targetUserId) {
+      return res.status(500).json({ error: 'No se pudo obtener el ID de usuario en Supabase Auth.' });
+    }
+
+    // 2. Insertar o actualizar el perfil en public.usuarios
+    const { data: userProfile, error: profileErr } = await supabase
+      .from('usuarios')
+      .upsert({
+        id: targetUserId,
+        email: emailClean,
+        nombre: emailClean.split('@')[0],
+        rol: rol || 'agente',
+        equipo: equipo || 'Global',
+        activo: true
+      })
+      .select()
+      .single();
+
+    if (profileErr) throw profileErr;
+
+    return res.status(201).json({
+      success: true,
+      message: `Usuario ${emailClean} registrado con éxito en Supabase Auth y Base de Datos.`,
+      user: userProfile
+    });
+  } catch (err) {
+    console.error('[Invitar Usuario Error]', err);
+    return res.status(500).json({ error: err.message || 'Error procesando el registro del usuario.' });
+  }
+});
+
 module.exports = router;

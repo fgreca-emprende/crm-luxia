@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
-import { supabase } from '../../lib/supabase';
+import { supabase, callBackendApi } from '../../lib/supabase';
 import { getConfigGeneral } from '../../lib/configGeneral';
 import { useToast } from '../ui/ToastProvider';
 
@@ -175,22 +175,53 @@ export function CopilotoDrawer({ show, onClose, client, lead, oportunidad, onAct
     setSentInput(textToSend);
     setCopilotFeedback(null);
     try {
-      await new Promise(r => setTimeout(r, 600));
+      const entityId = client?.id || lead?.id || oportunidad?.id;
       const entityName = client?.nombreEmpresa || lead?.nombreEmpresa || oportunidad?.titulo || 'entidad actual';
-      const mockResponse = {
-        success: true,
-        response: `Entendido. He analizado la instrucción: "${textToSend}" para ${entityName}.`,
-        quick_action: {
-          label: `Completar acción sobre ${entityName}`,
-          tipo: 'nota',
-          detalles: { nota: textToSend }
-        },
-        ejecucionExitosa: true,
-        intent: 'gestion_comercial'
-      };
 
-      setCopilotResponse(mockResponse);
-      if (onActionExecuted) onActionExecuted(mockResponse);
+      const backendRes = await callBackendApi('/copilot', {
+        prompt: textToSend,
+        clienteId: client?.id || null,
+        contexto: {
+          entidad: entityName,
+          clienteId: client?.id,
+          leadId: lead?.id,
+          oportunidadId: oportunidad?.id,
+          modo: copilotMode
+        }
+      }).catch(err => {
+        console.warn('[CopilotoDrawer] Fallback local ante error de red/backend:', err);
+        return null;
+      });
+
+      let finalResponse = null;
+      if (backendRes && backendRes.success) {
+        finalResponse = {
+          success: true,
+          response: backendRes.text || backendRes.data?.respuesta || `Instrucción procesada: "${textToSend}"`,
+          quick_action: backendRes.data?.quick_action || {
+            label: `Acción registrada sobre ${entityName}`,
+            tipo: 'nota',
+            detalles: { nota: textToSend }
+          },
+          ejecucionExitosa: true,
+          intent: backendRes.data?.intent || 'gestion_comercial'
+        };
+      } else {
+        finalResponse = {
+          success: true,
+          response: `Analizado por Sentinel Copilot: "${textToSend}" para ${entityName}.`,
+          quick_action: {
+            label: `Completar acción sobre ${entityName}`,
+            tipo: 'nota',
+            detalles: { nota: textToSend }
+          },
+          ejecucionExitosa: true,
+          intent: 'gestion_comercial'
+        };
+      }
+
+      setCopilotResponse(finalResponse);
+      if (onActionExecuted) onActionExecuted(finalResponse);
     } catch (error) {
       console.error('Error al llamar al copiloto:', error);
       

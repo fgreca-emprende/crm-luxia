@@ -146,13 +146,13 @@ export function UserRoleProvider({ user, children }) {
   };
 
   const DEFAULT_SCOPES = {
-    leads: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'ALL' },
-    oportunidades: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'ALL' },
-    clientes: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'ALL' },
-    tablero: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'OWN' },
-    alertas: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'ALL' },
-    capacitacion: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'OWN' },
-    consumo_ia: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'NONE' }
+    leads: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
+    oportunidades: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
+    clientes: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
+    tablero: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'OWN' },
+    alertas: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
+    capacitacion: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'OWN' },
+    consumo_ia: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'NONE' }
   };
 
   const hasPermission = useCallback((typeOrActionKey, maybeActionKey) => {

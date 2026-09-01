@@ -292,7 +292,7 @@ export function MeetCountdownWidget() {
       setUploadProgress(50);
       const fileName = `reuniones_locales/${activeCall.meetingCode}_${Date.now()}.webm`;
       
-      const { data, error } = await supabase.storage.from('crm-files').upload(fileName, blob, {
+      const { data, error } = await supabase.storage.from('grabaciones_meet').upload(fileName, blob, {
         contentType: 'video/webm',
         upsert: true
       });

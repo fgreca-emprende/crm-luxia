@@ -141,11 +141,18 @@ export function ExportDrawer({ show, onClose, defaultEntity = 'leads' }) {
         return field ? `"${field.nombre}"` : `"${key}"`;
       }).join(',');
 
+      // Helper para prevenir CSV Formula Injection
+      const sanitizeCsvField = (val) => {
+        if (val === undefined || val === null) return '""';
+        let strVal = String(val).replace(/"/g, '""');
+        if (/^[=+\-@\t\r]/.test(strVal)) {
+          strVal = `'${strVal}`;
+        }
+        return `"${strVal}"`;
+      };
+
       const csvRows = rows.map(r => {
-        return selectedFields.map(key => {
-          const val = r[key] !== undefined && r[key] !== null ? String(r[key]).replace(/"/g, '""') : '';
-          return `"${val}"`;
-        }).join(',');
+        return selectedFields.map(key => sanitizeCsvField(r[key])).join(',');
       });
 
       const csvContent = '\uFEFF' + [headers, ...csvRows].join('\r\n');

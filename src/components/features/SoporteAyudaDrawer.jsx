@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase, callBackendApi } from '../../lib/supabase';
 import { getConfigGeneral } from '../../lib/configGeneral';
 import { useToast } from '../ui/ToastProvider';
 import ReactMarkdown from 'react-markdown';
@@ -69,9 +69,20 @@ export function SoporteAyudaDrawer({ show, onClose }) {
     setErrorMessage('');
 
     try {
-      await new Promise(r => setTimeout(r, 600));
+      const aiRes = await callBackendApi('/soporte-agent', {
+        pregunta: queryText,
+        seccionActual: 'General / CRM'
+      }).catch(err => {
+        console.warn('[SoporteAyudaDrawer] Fallback local ante error de red:', err);
+        return null;
+      });
 
-      let reply = `Para resolver tu consulta sobre **"${queryText}"**:\n\n1. Dirígete a la sección correspondiente en el menú lateral de **LUXIA CRM**.\n2. Si requieres permisos administrativos, solicita a tu Supervisor o Administrador el rol adecuado en *Configuración > Usuarios*.\n3. Todos los datos se sincronizan en tiempo real en la base de datos PostgreSQL de Supabase.`;
+      let reply = '';
+      if (aiRes && aiRes.success && (aiRes.text || aiRes.data?.respuesta)) {
+        reply = aiRes.data?.respuesta || aiRes.text;
+      } else {
+        reply = `Para resolver tu consulta sobre **"${queryText}"**:\n\n1. Dirígete a la sección correspondiente en el menú superior de **LUXIA CRM**.\n2. Si requieres permisos administrativos, solicita a tu Supervisor o Administrador el rol adecuado en *Configuración > Usuarios*.\n3. Todos los datos se sincronizan en tiempo real en la base de datos PostgreSQL de Supabase.`;
+      }
 
       setMessages(prev => [
         ...prev,

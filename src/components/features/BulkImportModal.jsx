@@ -439,7 +439,7 @@ export function BulkImportModal({ show, onClose, initialEntity = 'leads', user, 
             });
           }
         } else if (selectedEntity === 'clientes') {
-          const clienteId = 'client_' + Math.random().toString(36).substring(2, 10);
+          const clienteId = 'client_' + (window.crypto?.randomUUID ? window.crypto.randomUUID().split('-')[0] : Date.now().toString(36));
           const docPayload = {
             id: clienteId,
             nombre_empresa: std.nombreEmpresa,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../../../lib/supabase';
+import { supabase, callBackendApi } from '../../../lib/supabase';
 import { getConfigGeneral, setConfigGeneral } from '../../../lib/configGeneral';
 import { useToast } from '../../ui/ToastProvider';
 import { ConfirmModal } from './ConfirmModal';
@@ -216,15 +216,23 @@ export function UsersConfigPanel({ currentUser, isSuperAdmin }) {
         }
       }
 
-      const { error } = await supabase.from('usuarios').upsert({
-        email: emailLower,
-        nombre: emailLower.split('@')[0],
-        rol: targetRol,
-        equipo: finalEquipo,
-        activo: true
-      }, { onConflict: 'email' });
-
-      if (error) throw error;
+      try {
+        await callBackendApi('/usuarios/invitar', {
+          email: emailLower,
+          rol: targetRol,
+          equipo: finalEquipo
+        });
+      } catch (backendErr) {
+        console.warn('[UsersConfigPanel] Fallback a upsert directo:', backendErr.message);
+        const { error } = await supabase.from('usuarios').upsert({
+          email: emailLower,
+          nombre: emailLower.split('@')[0],
+          rol: targetRol,
+          equipo: finalEquipo,
+          activo: true
+        }, { onConflict: 'email' });
+        if (error) throw error;
+      }
 
       showAlert(`Usuario ${emailLower} registrado con éxito.`, 'success');
       setTargetEmail('');

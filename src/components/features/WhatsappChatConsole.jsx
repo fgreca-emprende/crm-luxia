@@ -250,7 +250,7 @@ export function WhatsappChatConsole({ clienteId, leadId, initialPhone }) {
       setSelectedTemplate('');
       setTemplateParams({});
       setIsWhisper(false);
-      showAlert(isWhisper ? 'Nota interna guardada.' : 'Mensaje enviado exitosamente.', 'success');
+      showAlert(isWhisper ? 'Nota interna guardada.' : 'Registrado en Bitácora / Registro Interno.', 'success');
       loadMessages();
     } catch (err) {
       console.error('Error sending WhatsApp message:', err);
