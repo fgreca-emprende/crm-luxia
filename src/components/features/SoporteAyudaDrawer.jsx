@@ -91,7 +91,7 @@ export function SoporteAyudaDrawer({ show, onClose }) {
         {
           id: `error-${Date.now()}`,
           role: 'assistant',
-          text: `⚠️ **Error:** ${friendlyMessage}`,
+          text: `⚠️ **Error:** ${error.message || 'Error inesperado al conectar con el servidor de soporte.'}`,
           isError: true
         }
       ]);

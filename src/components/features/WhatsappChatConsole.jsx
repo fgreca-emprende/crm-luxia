@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase, callBackendApi } from '../../lib/supabase';
 import { getConfigGeneral } from '../../lib/configGeneral';
 import { useToast } from '../ui/ToastProvider';
 import { SpinnerPremium } from '../ui/SpinnerPremium';
@@ -265,9 +265,28 @@ export function WhatsappChatConsole({ clienteId, leadId, initialPhone }) {
     if (!selectedContact) return;
     setSuggesting(true);
     try {
-      const draft = `Hola ${selectedContact?.nombre || 'estimado cliente'}, ¿cómo estás? Te escribo de parte del equipo de Luxia para dar seguimiento a nuestra conversación. ¿Tendrás unos minutos esta semana para revisar los detalles?`;
+      const prompt = `Genera un mensaje cordial, profesional y empático para enviar por WhatsApp a ${selectedContact?.nombre || 'el contacto'} de LUXIA Agro. Contexto de teléfono: ${selectedContact?.telefono || ''}.`;
+      
+      const aiRes = await callBackendApi('/copilot', {
+        prompt,
+        clienteId: clienteId || null,
+        contexto: {
+          contactoNombre: selectedContact.nombre,
+          telefono: selectedContact.telefono,
+          clienteId,
+          leadId
+        }
+      }).catch(() => null);
+
+      let draft = '';
+      if (aiRes?.success && (aiRes.text || aiRes.data?.sugerencia)) {
+        draft = aiRes.data?.sugerencia || aiRes.text;
+      } else {
+        draft = `Hola ${selectedContact?.nombre || 'estimado cliente'}, ¿cómo estás? Te escribo de parte del equipo de LUXIA Agro para dar seguimiento a nuestra conversación técnica y comercial. ¿Tendrás unos minutos esta semana para revisar los detalles?`;
+      }
+
       setTextMessage(draft);
-      showAlert('Sugerencia de LUXIA IA cargada.', 'success');
+      showAlert('Sugerencia de Sentinel Copilot cargada con éxito.', 'success');
     } catch (err) {
       console.error('Error fetching suggestion:', err);
       showAlert(`Copilot falló: ${err.message}`, 'danger');

@@ -95,7 +95,7 @@ const ENTITY_CONFIGS = {
   }
 };
 
-export function BulkImportModal({ show, onClose, initialEntity = 'leads', user }) {
+export function BulkImportModal({ show, onClose, initialEntity = 'leads', user, onImportCompleted }) {
   const { showAlert } = useToast();
   const { userTeam, getDataScope } = useUserRole();
   const normalizarEquipo = (teamStr) => {
@@ -375,13 +375,12 @@ export function BulkImportModal({ show, onClose, initialEntity = 'leads', user }
       if (rowErrors.length > 0) {
         errors.push({ rowNumber, errors: rowErrors });
       } else {
-        validRows.push({ rowNumber, data: itemData });
-        validated.push({ rowNumber: rowIndex + 2, data: { standard: standardObj, camposDinamicos: dynObj }, raw: row });
+        validRows.push({ rowNumber, data: itemData, raw: row });
       }
     });
 
-    setValidatedData(validated);
-    setValidationErrors(errors);
+    setValidatedData(validRows);
+    setParsingErrors(errors);
     setStep('preview');
   };
 
@@ -415,11 +414,16 @@ export function BulkImportModal({ show, onClose, initialEntity = 'leads', user }
         if (selectedEntity === 'leads') {
           const docPayload = {
             nombre_empresa: std.nombreEmpresa,
+            nombre_contacto: std.nombreContacto || '',
+            correo: std.correo || '',
+            telefono: std.telefono || '',
             pais: std.pais ? std.pais.substring(0, 2).toUpperCase() : 'AR',
             estado: std.estado || 'nuevo',
             origen: std.origen || 'web_inbound',
-            monto_estimado: Number(std.montoEstimado) || 0,
-            asignado_a: entityScope === 'OWN' ? user?.email : (std.asignadoA || user?.email)
+            volumen_mensual_proyectado: Number(std.volumenMensualProyectado || std.montoEstimado) || 0,
+            asignado_a: entityScope === 'OWN' ? user?.email : (std.asignadoA || user?.email),
+            notas: std.notas || '',
+            campos_dinamicos: dyn
           };
 
           const { data: newLead, error } = await supabase.from('leads').insert(docPayload).select().single();
@@ -431,33 +435,76 @@ export function BulkImportModal({ show, onClose, initialEntity = 'leads', user }
               nombre: std.nombreContacto || 'Contacto Lead',
               email: std.correo || '',
               telefono: std.telefono || '',
-              cargo: 'Contacto Principal (Alta Masiva)'
+              puesto: 'Contacto Principal (Alta Masiva)'
             });
           }
         } else if (selectedEntity === 'clientes') {
+          const clienteId = 'client_' + Math.random().toString(36).substring(2, 10);
           const docPayload = {
+            id: clienteId,
             nombre_empresa: std.nombreEmpresa,
+            cuit_rut_rfc: std.ruc || std.cuit || '',
             pais: std.pais ? std.pais.substring(0, 2).toUpperCase() : 'AR',
-            estado: std.estado || 'activo',
+            estado: std.estado || 'Ingresado',
             comercial_email: entityScope === 'OWN' ? user?.email : (std.comercialEmail || user?.email),
-            health_score: { score: 100, riesgo: 'Green' },
-            contacto_principal: {
-              nombre: std.contactoNombre || '',
-              email: std.contactoEmail || '',
-              telefono: std.contactoTelefono || ''
-            }
+            health_score: { score: 100, riesgo: 'Green', analisis: 'Cliente importado vía Bulk Import' },
+            observaciones: std.notas || '',
+            campos_dinamicos: dyn
           };
 
           const { error } = await supabase.from('clientes').insert(docPayload);
           if (error) throw error;
+
+          if (std.contactoNombre || std.nombreContacto || std.correo) {
+            await supabase.from('contactos').insert({
+              cliente_id: clienteId,
+              nombre: std.contactoNombre || std.nombreContacto || 'Contacto Principal',
+              email: std.contactoEmail || std.correo || '',
+              telefono: std.contactoTelefono || std.telefono || '',
+              puesto: 'Contacto Principal (Alta Masiva)'
+            });
+          }
         } else if (selectedEntity === 'oportunidades') {
+          // Resolver o crear cliente_id
+          let resolvedClienteId = null;
+          const clienteNombreBuscado = (std.clienteNombre || std.nombreEmpresa || '').trim();
+          
+          if (clienteNombreBuscado) {
+            const { data: existingClients } = await supabase
+              .from('clientes')
+              .select('id')
+              .ilike('nombre_empresa', clienteNombreBuscado)
+              .limit(1);
+
+            if (existingClients && existingClients.length > 0) {
+              resolvedClienteId = existingClients[0].id;
+            } else {
+              resolvedClienteId = 'client_' + Math.random().toString(36).substring(2, 10);
+              await supabase.from('clientes').insert({
+                id: resolvedClienteId,
+                nombre_empresa: clienteNombreBuscado,
+                pais: std.pais ? std.pais.substring(0, 2).toUpperCase() : 'AR',
+                comercial_email: entityScope === 'OWN' ? user?.email : (std.comercialEmail || user?.email),
+                estado: 'Ingresado'
+              });
+            }
+          }
+
+          if (!resolvedClienteId) {
+            throw new Error('No se pudo asociar la oportunidad a un cliente válido.');
+          }
+
           const docPayload = {
-            titulo: std.nombre,
-            cliente_nombre: std.clienteNombre,
+            nombre: std.nombre || 'Oportunidad Comercial',
+            cliente_id: resolvedClienteId,
             comercial_email: entityScope === 'OWN' ? user?.email : (std.comercialEmail || user?.email),
-            monto: Number(std.montoEstimadoMensual) || 0,
+            monto_estimado_mensual: Number(std.montoEstimadoMensual || std.monto) || 0,
+            fecha_estimada_cierre: std.fechaEstimadaCierre || null,
             pais: std.pais ? std.pais.substring(0, 2).toUpperCase() : 'AR',
-            etapa: std.etapa || 'diagnostico'
+            etapa: std.etapa || 'diagnostico',
+            tipo_pipeline: 'adquisicion',
+            tipo_servicio: std.tipoServicio || 'default',
+            campos_dinamicos: dyn
           };
 
           const { error } = await supabase.from('oportunidades').insert(docPayload);

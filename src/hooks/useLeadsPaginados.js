@@ -96,8 +96,11 @@ export function useLeadsPaginados(pageSize = 25, selectedCountry = '', searchTer
       }
 
       if (searchTerm && searchTerm.trim()) {
-        const term = `%${searchTerm.trim()}%`;
-        query = query.or(`nombre_empresa.ilike.${term},nombre_contacto.ilike.${term},correo.ilike.${term}`);
+        const cleanTerm = searchTerm.replace(/[%_,()"'\\/]/g, '').trim();
+        if (cleanTerm) {
+          const term = `%${cleanTerm}%`;
+          query = query.or(`nombre_empresa.ilike.${term},nombre_contacto.ilike.${term},correo.ilike.${term}`);
+        }
       }
 
       query = query.order('created_at', { ascending: false }).range(from, to);

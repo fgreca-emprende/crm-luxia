@@ -21,10 +21,10 @@ function getInitials(name = '') {
 }
 
 export function ContactCard({ contacto, onEdit, onDelete }) {
-  if (!contacto) return null;
-
   const { isLector: isLectorRole, role } = useUserRole();
   const isLector = isLectorRole || role === 'editor';
+
+  if (!contacto) return null;
   const initials = getInitials(contacto.nombre);
   const avatarColor = getAvatarColor(contacto.nombre);
 

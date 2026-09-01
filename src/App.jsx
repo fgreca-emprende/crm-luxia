@@ -827,7 +827,9 @@ function CRMAppContent({ user, setUser }) {
                 if (user?.id) {
                   await supabase.from('usuarios').update({ estado_presencia: 'Desconectado', updated_at: new Date().toISOString() }).eq('id', user.id);
                 }
-              } catch (e) {}
+              } catch (_e) {
+                // Silencioso en cierre de sesión
+              }
               await supabase.auth.signOut();
               setUser(null);
               showAlert('Sesión cerrada con éxito.', 'info');
@@ -1150,7 +1152,9 @@ function CRMAppContent({ user, setUser }) {
                       if (user?.id) {
                         await supabase.from('usuarios').update({ estado_presencia: 'Desconectado', updated_at: new Date().toISOString() }).eq('id', user.id);
                       }
-                    } catch (e) {}
+                    } catch (_e) {
+                      // Silencioso en cierre de sesión
+                    }
                     await supabase.auth.signOut();
                     setUser(null);
                     showAlert('Sesión cerrada con éxito.', 'info');

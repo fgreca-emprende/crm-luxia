@@ -79,14 +79,16 @@ export function AgentPresenceMonitor({
     return { key: 'disponible', isStale: false, label: '🟢 Conectado' };
   };
 
+  const userEmail = user?.email;
+
   // Filtrar usuarios por equipo y país seleccionados
   const filteredAgents = useMemo(() => {
-    const isRestrictedAgent = !canView('monitoreo_presencia') && user?.email;
+    const isRestrictedAgent = !canView('monitoreo_presencia') && userEmail;
 
     return usersList.filter(u => {
       if (!u.activo) return false;
 
-      if (isRestrictedAgent && u.email !== user.email.toLowerCase().trim()) {
+      if (isRestrictedAgent && u.email !== userEmail.toLowerCase().trim()) {
         return false;
       }
 
@@ -109,7 +111,7 @@ export function AgentPresenceMonitor({
 
       return true;
     }).sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }, [usersList, targetTeam, selectedCountry, canView, user?.email]);
+  }, [usersList, targetTeam, selectedCountry, canView, userEmail]);
 
   // Contadores de presencia usando getEffectivePresence
   const presenceCounts = useMemo(() => {

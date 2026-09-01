@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../../../lib/supabase';
 import { getConfigGeneral, setConfigGeneral } from '../../../lib/configGeneral';
 import { useToast } from '../../ui/ToastProvider';
 import { logSystemEvent } from '../../../lib/telemetry';
@@ -205,16 +206,31 @@ export function PermissionsConfigPanel({ user }) {
   const loadPermisosMatrix = useCallback(async () => {
     setPermisosLoading(true);
     try {
-      const data = await getConfigGeneral('rol_matrix');
-      if (data) {
+      // 1. Intentar cargar desde config_permisos (fuente de la verdad)
+      const { data: permDoc, error: permError } = await supabase
+        .from('config_permisos')
+        .select('*')
+        .eq('id', 'rol_matrix')
+        .maybeSingle();
+
+      if (permDoc && !permError) {
         setPermisosMatrix({
-          views: { ...DEFAULT_MATRIX.views, ...(data.views || {}) },
-          actions: { ...DEFAULT_MATRIX.actions, ...(data.actions || {}) },
-          scopes: { ...DEFAULT_MATRIX.scopes, ...(data.scopes || {}) }
+          views: { ...DEFAULT_MATRIX.views, ...(permDoc.views || {}) },
+          actions: { ...DEFAULT_MATRIX.actions, ...(permDoc.actions || {}) },
+          scopes: { ...DEFAULT_MATRIX.scopes, ...(permDoc.scopes || {}) }
         });
       } else {
-        await setConfigGeneral('rol_matrix', DEFAULT_MATRIX);
-        setPermisosMatrix(DEFAULT_MATRIX);
+        // Fallback a config_general o inicializar
+        const data = await getConfigGeneral('rol_matrix');
+        if (data) {
+          setPermisosMatrix({
+            views: { ...DEFAULT_MATRIX.views, ...(data.views || {}) },
+            actions: { ...DEFAULT_MATRIX.actions, ...(data.actions || {}) },
+            scopes: { ...DEFAULT_MATRIX.scopes, ...(data.scopes || {}) }
+          });
+        } else {
+          setPermisosMatrix(DEFAULT_MATRIX);
+        }
       }
     } catch (err) {
       showAlert(`Error al cargar permisos: ${err.message}`, 'danger');
@@ -231,11 +247,28 @@ export function PermissionsConfigPanel({ user }) {
     e.preventDefault();
     setSaving(true);
     try {
+      const payload = {
+        id: 'rol_matrix',
+        views: permisosMatrix.views,
+        actions: permisosMatrix.actions,
+        scopes: permisosMatrix.scopes,
+        updated_at: new Date().toISOString()
+      };
+
+      // Guardar en config_permisos para UserRoleContext y RLS
+      const { error: permError } = await supabase
+        .from('config_permisos')
+        .upsert(payload, { onConflict: 'id' });
+
+      if (permError) throw permError;
+
+      // Guardar también en config_general para retrocompatibilidad
       await setConfigGeneral('rol_matrix', permisosMatrix);
+
       await logSystemEvent(user, 'system_config_change', {
         tipoConfig: 'matriz_permisos'
       });
-      showAlert('Matriz de Permisos actualizada con éxito.', 'success');
+      showAlert('Matriz de Permisos actualizada y sincronizada en tiempo real.', 'success');
     } catch (err) {
       showAlert(`Error al guardar permisos: ${err.message}`, 'danger');
     } finally {
@@ -247,8 +280,18 @@ export function PermissionsConfigPanel({ user }) {
     if (!window.confirm('¿Estás seguro de que deseas restablecer toda la matriz de permisos a los valores por defecto de fábrica?')) return;
     setSaving(true);
     try {
+      const payload = {
+        id: 'rol_matrix',
+        views: DEFAULT_MATRIX.views,
+        actions: DEFAULT_MATRIX.actions,
+        scopes: DEFAULT_MATRIX.scopes,
+        updated_at: new Date().toISOString()
+      };
+
+      await supabase.from('config_permisos').upsert(payload, { onConflict: 'id' });
       await setConfigGeneral('rol_matrix', DEFAULT_MATRIX);
       setPermisosMatrix(DEFAULT_MATRIX);
+
       await logSystemEvent(user, 'system_config_change', {
         tipoConfig: 'matriz_permisos_reset'
       });

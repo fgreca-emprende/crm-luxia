@@ -13,9 +13,28 @@ export function ClienteTimeline({ clienteId, leadId, oportunidadId, iaPausada })
   // Filtros
   const [timeFilter, setTimeFilter] = useState('todo'); // '7d', '30d', 'mes', 'todo'
   const [eventTypeFilter, setEventTypeFilter] = useState('todos');
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const { showAlert } = useToast();
   const { isAdmin, isLector, user } = useUserRole();
+
+  const loadMore = () => {
+    // Interacciones cargadas por bloque
+    setHasMore(false);
+  };
+
+  const handleToggleCrmSubtask = async (activityId, subtaskId, currentStatus) => {
+    setInteracciones(prev => prev.map(item => {
+      if (item.id === activityId && Array.isArray(item.tareas)) {
+        return {
+          ...item,
+          tareas: item.tareas.map(t => t.id === subtaskId ? { ...t, completada: !currentStatus } : t)
+        };
+      }
+      return item;
+    }));
+  };
   const [deleteConfirmState, setDeleteConfirmState] = useState({
     show: false,
     interactionId: null
@@ -338,7 +357,7 @@ export function ClienteTimeline({ clienteId, leadId, oportunidadId, iaPausada })
                     </div>
                   )}
                   {item.tipo === 'grabacion_meet' ? (
-                    <MeetTimelineCard item={item} />
+                    <MeetTimelineCard item={item} isLector={isLector} />
                   ) : item.tipo === 'actividad_crm' ? (
                     <CrmActivityTimelineCard item={item} onToggleSubtask={handleToggleCrmSubtask} />
                   ) : (
@@ -396,7 +415,7 @@ export function ClienteTimeline({ clienteId, leadId, oportunidadId, iaPausada })
   );
 }
 
-function MeetTimelineCard({ item }) {
+function MeetTimelineCard({ item, isLector }) {
   const [activeTab, setActiveTab] = useState('resumen');
   const [searchQuery, setSearchQuery] = useState('');
   const [tasks, setTasks] = useState([]);

@@ -130,19 +130,31 @@ export function CopilotoDrawer({ show, onClose, client, lead, oportunidad, onAct
     }
   };
 
-  const handleFeedbackPositive = async () => {
-    setCopilotFeedback('positive');
-    showAlert('¡Gracias! LUXIA IA aprende de tus aciertos.', 'success');
+  const handleCopilotFeedback = (type) => {
+    if (type === 'positive') {
+      setCopilotFeedback('positive');
+      showAlert('¡Gracias! LUXIA IA aprende de tus aciertos.', 'success');
+    } else if (type === 'negative') {
+      setShowCopilotNegativeInput(true);
+    }
   };
 
-  const handleFeedbackNegativeSubmit = async (e) => {
-    e.preventDefault();
+  const submitCopilotFeedback = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!copilotCorrectionText.trim()) return;
 
     setCopilotFeedback('negative');
     setShowCopilotNegativeInput(false);
     setCopilotCorrectionText('');
     showAlert('Feedback registrado. Evaluaremos la corrección del prompt.', 'success');
+  };
+
+  const handleFeedbackPositive = async () => {
+    handleCopilotFeedback('positive');
+  };
+
+  const handleFeedbackNegativeSubmit = async (e) => {
+    submitCopilotFeedback(e);
   };
 
   const handleSend = async (textToSend = transcript) => {

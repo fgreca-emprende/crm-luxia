@@ -236,7 +236,7 @@ router.post('/soporte-agent', requireAuth, async (req, res) => {
 // 5. EXPORTACIÓN SEGURA DE DATOS (Con auditoría y Data Scopes)
 // ============================================================================
 router.post('/exportar-datos', requireAuth, async (req, res) => {
-  const { entidad, filtros } = req.body;
+  const { entidad, filtros = {} } = req.body;
   const supabase = req.app.get('supabase');
   const user = req.user;
 
@@ -244,25 +244,72 @@ router.post('/exportar-datos', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Entidad no válida para exportación.' });
   }
 
-  // Consultar registros respetando RLS del usuario
-  const { data: rows, error } = await supabase.from(entidad).select('*');
+  // 1. Obtener perfil y rol real del usuario
+  const { data: uProfile } = await supabase
+    .from('usuarios')
+    .select('rol, equipo')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  const userRole = uProfile?.rol || 'lector';
+  const userTeam = uProfile?.equipo || 'Global';
+
+  // 2. Construir consulta con Data Scopes y Filtros
+  let query = supabase.from(entidad).select('*');
+
+  // Aplicar Data Scopes según el rol si no es administrador
+  if (!['superadmin', 'admin'].includes(userRole)) {
+    if (['supervisor', 'supervisor_cx'].includes(userRole)) {
+      // Supervisor: miembros de su mismo equipo
+      const { data: teamUsers } = await supabase
+        .from('usuarios')
+        .select('id, email')
+        .eq('equipo', userTeam);
+
+      const teamEmails = (teamUsers || []).map(u => u.email).filter(Boolean);
+      if (entidad === 'leads') {
+        query = query.in('asignado_a', teamEmails.length > 0 ? teamEmails : [user.email]);
+      } else if (entidad === 'clientes' || entidad === 'oportunidades') {
+        query = query.in('comercial_email', teamEmails.length > 0 ? teamEmails : [user.email]);
+      }
+    } else {
+      // Agente / Lector / Editor
+      if (entidad === 'leads') {
+        query = query.eq('asignado_a', user.email);
+      } else if (entidad === 'clientes' || entidad === 'oportunidades') {
+        query = query.eq('comercial_email', user.email);
+      }
+    }
+  }
+
+  // Aplicar filtros de fecha si fueron provistos
+  if (filtros.startDate) {
+    query = query.gte('created_at', filtros.startDate);
+  }
+  if (filtros.endDate) {
+    query = query.lte('created_at', filtros.endDate);
+  }
+
+  const { data: rows, error } = await query;
   if (error) {
     return res.status(500).json({ error: error.message });
   }
 
-  // Registrar auditoría inmutable
+  const exportedRows = rows || [];
+
+  // 3. Registrar auditoría inmutable con rol real
   await supabase.from('logs_auditoria_exportacion').insert({
     usuario: user.email,
-    rol: 'operador',
+    rol: userRole,
     entidad,
-    filas_exportadas: rows.length,
+    filas_exportadas: exportedRows.length,
     ip: req.ip || '127.0.0.1',
-    alerta_exfiltracion: rows.length > 500
+    alerta_exfiltracion: exportedRows.length > 500
   });
 
   return res.json({
-    total: rows.length,
-    data: rows
+    total: exportedRows.length,
+    data: exportedRows
   });
 });
 

@@ -154,10 +154,7 @@ export function DashboardKPIs({ selectedCountry, user }) {
       const normU = normalizarEquipo(u.equipo);
       
       // 1. Filtrar por el tab activo
-      if (activeTab === 'pipeline' || activeTab === 'cartera') {
-        if (normU !== 'adquisicion' && normU !== 'retencion') return false;
-      } else if (activeTab === 'cx') {
-      } else if (activeTab === 'logros') {
+      if (activeTab === 'pipeline' || activeTab === 'cartera' || activeTab === 'logros') {
         if (normU !== 'adquisicion' && normU !== 'retencion') return false;
       }
       
@@ -231,7 +228,9 @@ export function DashboardKPIs({ selectedCountry, user }) {
           setExchangeRates(rates);
           try {
             await setConfigGeneral('rates', { rates, lastUpdated: new Date().toISOString() });
-          } catch (e) {}
+          } catch (_e) {
+            // Error silencioso al cachear tipos de cambio
+          }
         }
       } catch (err) {
         console.warn('[Dashboard] Error fetching exchange rates:', err.message);

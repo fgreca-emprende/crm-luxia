@@ -45,10 +45,12 @@ export function ClientGestionModal({ show, onClose, clientData, onSaved, iaPausa
   const [originalFaseManual, setOriginalFaseManual] = useState(clientData?.fase_manual || '');
   
   const [saving, setSaving] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showCopiloto, setShowCopiloto] = useState(false);
   const [budgetDisabled, setBudgetDisabled] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [motivoEliminar, setMotivoEliminar] = useState('');
   const [selectedChatContactPhone, setSelectedChatContactPhone] = useState('');
   const { showAlert } = useToast();
 

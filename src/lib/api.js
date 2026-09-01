@@ -1,3 +1,5 @@
+const MAX_CACHE_SIZE = 200;
+
 export const cacheManager = {
   data: new Map(),
   get(key) {
@@ -7,9 +9,18 @@ export const cacheManager = {
       this.data.delete(key);
       return null;
     }
+    // Mover al final para mantener orden LRU
+    this.data.delete(key);
+    this.data.set(key, item);
     return item.value;
   },
-  set(key, value, ttlMs) {
+  set(key, value, ttlMs = 30000) {
+    // Si excede el tamaño máximo, desalojar el más antiguo (primer elemento)
+    if (this.data.size >= MAX_CACHE_SIZE && !this.data.has(key)) {
+      const firstKey = this.data.keys().next().value;
+      if (firstKey) this.data.delete(firstKey);
+    }
+    this.data.delete(key);
     this.data.set(key, { value, expiry: Date.now() + ttlMs });
   },
   clear() {

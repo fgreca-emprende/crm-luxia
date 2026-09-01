@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../../../lib/supabase';
+import { supabase, callBackendApi } from '../../../../lib/supabase';
 import { getConfigGeneral } from '../../../../lib/configGeneral';
 import { useToast } from '../../../ui/ToastProvider';
 import { useUserRole } from '../../../../contexts/UserRoleContext';
@@ -177,65 +177,72 @@ export function useUserExamState(user) {
         return q.shuffledMapping ? q.shuffledMapping[shuffledIdx] : shuffledIdx;
       });
 
-      // 2. Evaluar Teórico
-      const originalTeorico = rawExamWithAnswers?.teorico || [];
-      let correctCount = 0;
-      originalTeorico.forEach((q, idx) => {
-        const userChoice = mappedTeoricoRespuestas[idx];
-        const correctChoice = q.correcta !== undefined ? q.correcta : 0;
-        if (userChoice === correctChoice) {
-          correctCount++;
-        }
-      });
+      let evalResult = null;
 
-      const totalQuestions = originalTeorico.length || 1;
-      const scoreTeorico = Math.round((correctCount / totalQuestions) * 100);
+      // 2. Invocar Backend Worker con Sentinel IA
+      try {
+        evalResult = await callBackendApi('/evaluar-examen', {
+          rol: docRol,
+          dificultad: docDif,
+          respuestasTeorico: mappedTeoricoRespuestas,
+          respuestaPractico: practicoRespuesta,
+          usuarioNombre: profileData?.nombre || currentEmail.split('@')[0]
+        });
+      } catch (backendErr) {
+        console.warn('[useUserExamState] Backend evaluador no disponible, evaluando con fallback:', backendErr.message);
+        
+        // Fallback local en caso de desconexión
+        const originalTeorico = rawExamWithAnswers?.teorico || [];
+        let correctCount = 0;
+        originalTeorico.forEach((q, idx) => {
+          const userChoice = mappedTeoricoRespuestas[idx];
+          const correctChoice = q.correcta !== undefined ? q.correcta : 0;
+          if (userChoice === correctChoice) correctCount++;
+        });
 
-      // 3. Evaluar Práctico
-      const wordCount = practicoRespuesta.trim().split(/\s+/).length;
-      let scorePractico = 80;
-      if (wordCount >= 50) scorePractico = 95;
-      else if (wordCount >= 25) scorePractico = 88;
+        const totalQuestions = originalTeorico.length || 1;
+        const scoreTeorico = Math.round((correctCount / totalQuestions) * 100);
+        const scorePractico = 80;
+        const scoreGlobal = Math.round((scoreTeorico * 0.5) + (scorePractico * 0.5));
+        const minRequired = capacitacionConfig?.porcentajeAprobacion || 75;
+        const aprobado = scoreGlobal >= minRequired;
 
-      const scoreGlobal = Math.round((scoreTeorico * 0.5) + (scorePractico * 0.5));
-      const minRequired = capacitacionConfig?.porcentajeAprobacion || 75;
-      const aprobado = scoreGlobal >= minRequired;
+        evalResult = {
+          scoreTeorico,
+          scorePractico,
+          scoreGlobal,
+          aprobado,
+          feedbackPractico: aprobado ? 'Examen completado satisfactoriamente.' : 'Requiere mayor repaso de los manuales operativos.'
+        };
 
-      const feedbackPractico = aprobado
-        ? `Excelente desempeño. Se valoró positivamente la claridad en la estructuración de la respuesta, el uso correcto de las herramientas del CRM y la alineación con las políticas operativas de Luxia.`
-        : `La respuesta práctica aborda aspectos generales pero requiere mayor detalle en los procedimientos y criterios de validación operativa. Te recomendamos repasar los manuales antes del próximo intento.`;
+        // Registrar intento de fallback
+        await supabase.from('examenes_intentos').insert({
+          usuario_email: currentEmail,
+          usuario_nombre: profileData?.nombre || currentEmail.split('@')[0],
+          rol: docRol,
+          dificultad: docDif,
+          fecha_intento: new Date().toISOString(),
+          respuestas_teorico: mappedTeoricoRespuestas,
+          score_teorico: scoreTeorico,
+          respuesta_practico: practicoRespuesta,
+          score_practico: scorePractico,
+          feedback_practico: evalResult.feedbackPractico,
+          score_global: scoreGlobal,
+          aprobado,
+          evaluado_por: 'luxia_ia_local',
+          estado: 'evaluado',
+          processed: true
+        });
+      }
 
-      const resultPayload = {
+      setExamResult({
         success: true,
-        scoreTeorico,
-        scorePractico,
-        scoreGlobal,
-        aprobado,
-        feedbackPractico,
-        estado: 'aprobado'
-      };
-
-      // 4. Registrar Intento en Supabase PostgreSQL
-      await supabase.from('examenes_intentos').insert({
-        usuario_email: currentEmail,
-        usuario_nombre: profileData?.nombre || currentEmail.split('@')[0],
-        rol: docRol,
-        dificultad: docDif,
-        fecha_intento: new Date().toISOString(),
-        respuestas_teorico: mappedTeoricoRespuestas,
-        score_teorico: scoreTeorico,
-        respuesta_practico: practicoRespuesta,
-        score_practico: scorePractico,
-        feedback_practico: feedbackPractico,
-        score_global: scoreGlobal,
-        aprobado,
-        evaluado_por: 'luxia_ia',
-        estado: 'aprobado',
-        processed: true
+        ...evalResult,
+        estado: 'evaluado'
       });
 
       // 5. Si aprobó, actualizar acreditación en perfil del usuario
-      if (aprobado) {
+      if (evalResult.aprobado) {
         const nextExpiration = new Date();
         nextExpiration.setDate(nextExpiration.getDate() + (capacitacionConfig?.frecuenciaDias || 90));
 
@@ -243,7 +250,7 @@ export function useUserExamState(user) {
           estado: 'certificado',
           rolCertificado: docRol,
           dificultadCertificada: docDif,
-          ultimoScore: scoreGlobal,
+          ultimoScore: evalResult.scoreGlobal,
           ultimoExamenAprobado: new Date().toISOString(),
           proximoExamenLimite: nextExpiration.toISOString()
         };
@@ -261,13 +268,13 @@ export function useUserExamState(user) {
         }));
       }
 
-      setExamResult(resultPayload);
       setStep('resultado');
+      showAlert(evalResult.aprobado ? '¡Felicitaciones! Has aprobado la certificación de LUXIA Agro.' : 'Evaluación completada. Puedes revisar el feedback para mejorar.', evalResult.aprobado ? 'success' : 'info');
       await loadData();
     } catch (err) {
-      console.error(err);
+      console.error('Error al evaluar el examen:', err);
       showAlert(`Error evaluando examen: ${err.message}`, 'danger');
-      setStep('dashboard');
+      setStep('teorico');
     }
   };
 

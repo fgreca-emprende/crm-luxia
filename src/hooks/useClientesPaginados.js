@@ -92,8 +92,11 @@ export function useClientesPaginados(pageSize = 25, selectedCountry = '', search
       }
 
       if (searchTerm && searchTerm.trim()) {
-        const term = `%${searchTerm.trim()}%`;
-        query = query.or(`nombre_empresa.ilike.${term},cuit_rut_rfc.ilike.${term},sitio_web.ilike.${term}`);
+        const cleanTerm = searchTerm.replace(/[%_,()"'\\/]/g, '').trim();
+        if (cleanTerm) {
+          const term = `%${cleanTerm}%`;
+          query = query.or(`nombre_empresa.ilike.${term},cuit_rut_rfc.ilike.${term},sitio_web.ilike.${term}`);
+        }
       }
 
       query = query.order('updated_at', { ascending: false }).range(from, to);
