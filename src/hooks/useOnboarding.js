@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { getConfigGeneral, setConfigGeneral } from '../lib/configGeneral';
 import { useToast } from '../components/ui/ToastProvider';
 
-export function useOnboarding(clienteId) {
+export function useOnboarding(clienteId, currentUser = null) {
   const [checklist, setChecklist] = useState(null);
   const [loading, setLoading] = useState(!!clienteId);
   const { showAlert } = useToast();
@@ -25,18 +25,36 @@ export function useOnboarding(clienteId) {
         { id: 'monitoreo_campo_30_dias', titulo: 'Monitoreo a Campo y Evaluación de Eficacia (30 días)', completado: false, fechaCompletado: null }
       ];
 
-      const saved = await getConfigGeneral(`onboarding_${clienteId}`);
-      if (saved && saved.pasos) {
-        setChecklist(saved);
+      // 1. Intentar leer desde la tabla estructurada onboarding_checklists
+      const { data: dbChecklist, error: dbErr } = await supabase
+        .from('onboarding_checklists')
+        .select('*')
+        .eq('cliente_id', clienteId)
+        .maybeSingle();
+
+      if (dbChecklist && !dbErr) {
+        setChecklist({
+          id: dbChecklist.id,
+          clienteId: dbChecklist.cliente_id,
+          pasos: dbChecklist.pasos || defaultTasks,
+          porcentajeCompletado: dbChecklist.porcentaje_completado || 0,
+          updatedAt: dbChecklist.updated_at
+        });
       } else {
-        const initial = {
-          clienteId,
-          pasos: defaultTasks,
-          porcentajeCompletado: 0,
-          creadoEn: new Date().toISOString()
-        };
-        await setConfigGeneral(`onboarding_${clienteId}`, initial);
-        setChecklist(initial);
+        // Fallback a config_general para retrocompatibilidad
+        const saved = await getConfigGeneral(`onboarding_${clienteId}`);
+        if (saved && saved.pasos) {
+          setChecklist(saved);
+        } else {
+          const initial = {
+            clienteId,
+            pasos: defaultTasks,
+            porcentajeCompletado: 0,
+            creadoEn: new Date().toISOString()
+          };
+          await setConfigGeneral(`onboarding_${clienteId}`, initial);
+          setChecklist(initial);
+        }
       }
     } catch (err) {
       console.error("Error al cargar onboarding checklist:", err);
@@ -54,13 +72,16 @@ export function useOnboarding(clienteId) {
     if (!checklist) return;
 
     try {
+      // Determinar email del usuario activo de forma dinámica
+      const userEmail = currentUser?.email || (await supabase.auth.getSession()).data.session?.user?.email || 'operador@luxia.com';
+
       const nuevosPasos = (checklist.pasos || []).map(paso => {
         if (paso.id === pasoId) {
           const nuevoEstado = !paso.completado;
           return {
             ...paso,
             completado: nuevoEstado,
-            completadoPor: nuevoEstado ? 'admin@luxia.com' : '',
+            completadoPor: nuevoEstado ? userEmail : '',
             fechaCompletado: nuevoEstado ? new Date().toISOString() : null,
             evidencia: nuevoEstado && evidencia ? evidencia : (nuevoEstado ? paso.evidencia || null : null)
           };
@@ -78,6 +99,19 @@ export function useOnboarding(clienteId) {
         updatedAt: new Date().toISOString()
       };
 
+      // Guardar en tabla onboarding_checklists si existe el registro, o en config_general
+      await supabase
+        .from('onboarding_checklists')
+        .upsert({
+          cliente_id: clienteId,
+          comercial_email: userEmail,
+          porcentaje_completado: nuevoPorcentaje,
+          pasos: nuevosPasos,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'cliente_id' })
+        .catch(() => null);
+
+      // Sincronizar en config_general
       await setConfigGeneral(`onboarding_${clienteId}`, updated);
       setChecklist(updated);
 
@@ -113,6 +147,15 @@ export function useOnboarding(clienteId) {
         pasos: nuevosPasos,
         updatedAt: new Date().toISOString()
       };
+
+      await supabase
+        .from('onboarding_checklists')
+        .upsert({
+          cliente_id: clienteId,
+          pasos: nuevosPasos,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'cliente_id' })
+        .catch(() => null);
 
       await setConfigGeneral(`onboarding_${clienteId}`, updated);
       setChecklist(updated);

@@ -35,23 +35,39 @@ async function validateApiKey(req, res, next) {
 // ============================================================================
 router.post('/public/web-to-lead', async (req, res) => {
   const supabase = req.app.get('supabase');
+const { sanitizeUserInput, sanitizeContext } = require('../utils/sanitize');
+
   const { nombreEmpresa, nombreContacto, correo, telefono, pais, camposDinamicos, formId } = req.body;
 
   if (!nombreEmpresa || !correo) {
     return res.status(400).json({ error: 'nombreEmpresa y correo son obligatorios.' });
   }
 
+  // [P1-8 FIX] Validar formato de correo electrónico
+  const emailClean = String(correo).trim().toLowerCase();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(emailClean)) {
+    return res.status(400).json({ error: 'Formato de correo electrónico inválido.' });
+  }
+
+  // [P1-8 FIX] Sanitizar entradas no confiables
+  const safeEmpresa = sanitizeUserInput(nombreEmpresa, 200);
+  const safeContacto = sanitizeUserInput(nombreContacto, 200);
+  const safeTelefono = sanitizeUserInput(telefono, 50);
+  const safePais = sanitizeUserInput(pais || 'PE', 5).toUpperCase();
+  const safeContext = sanitizeContext(camposDinamicos, 2000);
+
   try {
     // 1. Insertar el Lead en PostgreSQL
     const { data: lead, error: insertErr } = await supabase.from('leads').insert({
-      nombre_empresa: nombreEmpresa,
-      nombre_contacto: nombreContacto || '',
-      correo,
-      telefono: telefono || '',
-      pais: (pais || 'PE').toUpperCase(),
+      nombre_empresa: safeEmpresa,
+      nombre_contacto: safeContacto,
+      correo: emailClean,
+      telefono: safeTelefono,
+      pais: safePais,
       origen: 'web_form',
       estado: 'nuevo',
-      campos_dinamicos: camposDinamicos || {},
+      campos_dinamicos: safeContext,
       _trigger_ia: true
     }).select().single();
 
@@ -59,10 +75,10 @@ router.post('/public/web-to-lead', async (req, res) => {
 
     // 2. Ejecutar calificación en segundo plano con Sentinel Lead Scorer
     const prompt = `Analiza este nuevo lead inbound para Luxia:
-Empresa: ${nombreEmpresa}
-Contacto: ${nombreContacto} (${correo})
-País: ${pais}
-Datos adicionales: ${JSON.stringify(camposDinamicos || {})}`;
+Empresa: ${safeEmpresa}
+Contacto: ${safeContacto} (${emailClean})
+País: ${safePais}
+Datos adicionales: ${JSON.stringify(safeContext)}`;
 
     generateSentinelContent({
       agenteId: 'sentinel_lead_scorer',

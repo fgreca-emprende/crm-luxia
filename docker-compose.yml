@@ -40,14 +40,17 @@ services:
       GOTRUE_API_PORT: 9999
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/${POSTGRES_DB:-postgres}?sslmode=disable
-      GOTRUE_SITE_URL: http://localhost:5173
-      GOTRUE_URI_ALLOW_LIST: "*"
+      GOTRUE_SITE_URL: ${GOTRUE_SITE_URL:-http://localhost:5173}
+      # [P1-4 FIX] Lista explícita de URIs permitidas para redirección OAuth
+      GOTRUE_URI_ALLOW_LIST: ${GOTRUE_URI_ALLOW_LIST:-http://localhost:5173,http://localhost:4173,http://192.168.0.70:5173}
       GOTRUE_DISABLE_SIGNUP: "false"
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_EXP: 3600
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
-      GOTRUE_MAILER_AUTOCONFIRM: "true" # Autoconfirmar emails para agilidad en local
+      # [P1-5 FIX] Autoconfirmación configurable (false por defecto en prod)
+      GOTRUE_MAILER_AUTOCONFIRM: "${GOTRUE_MAILER_AUTOCONFIRM:-false}"
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: "${GOTRUE_RATE_LIMIT_EMAIL_SENT:-5}"
     networks:
       - crm-network
 
@@ -125,7 +128,7 @@ services:
   # 6. KONG API GATEWAY (Punto de entrada unificado en puerto 8000)
   # ============================================================================
   supabase-kong:
-    image: kong:2.8.1
+    image: kong:3.8
     container_name: crm-kong
     depends_on:
       - supabase-auth

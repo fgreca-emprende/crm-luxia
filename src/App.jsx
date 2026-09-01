@@ -10,6 +10,7 @@ import { NetworkBanner } from './components/ui/NetworkBanner';
 import { MeetCountdownWidget } from './components/ui/MeetCountdownWidget';
 import { PublicFormView } from './components/features/integrations/components/PublicFormView';
 import { LuxiaLogo } from './components/ui/LuxiaLogo';
+import { useInactivityTimer } from './hooks/useInactivityTimer';
 
 import { lazyWithRetry } from './lib/lazyWithRetry';
 
@@ -159,7 +160,9 @@ function CRMAppContent({ user, setUser }) {
     }
     const loadUsers = async () => {
       try {
-        const { data, error } = await supabase.from('usuarios').select('*');
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('id, email, nombre, rol, equipo, pais, activo, estado_presencia, estado_cx, presencia');
         if (data && !error) setAllUsers(data);
       } catch (err) {
         console.warn('[App] Error fetching users:', err);
@@ -282,114 +285,13 @@ function CRMAppContent({ user, setUser }) {
     localStorage.setItem('dismissed_system_alerts_map', JSON.stringify(updated));
   };
 
-  // --- Estados y Refs para Logout Automático (Inactividad) ---
-  const [showInactivityWarning, setShowInactivityWarning] = useState(false);
-  const [warningCountdown, setWarningCountdown] = useState(30);
-  const [securityConfig, setSecurityConfig] = useState({ habilitado: false, timeoutMinutos: 15 });
-  const inactivityTimerRef = useRef(null);
-  const countdownIntervalRef = useRef(null);
-
-  const resetTimer = useCallback(() => {
-    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-    
-    if (!user || !securityConfig.habilitado) return;
-
-    const timeoutMs = (securityConfig.timeoutMinutos * 60 * 1000) - (30 * 1000);
-    
-    inactivityTimerRef.current = setTimeout(() => {
-      setShowInactivityWarning(true);
-      setWarningCountdown(30);
-      
-      let secondsLeft = 30;
-      countdownIntervalRef.current = setInterval(() => {
-        secondsLeft -= 1;
-        setWarningCountdown(secondsLeft);
-        if (secondsLeft <= 0) {
-          clearInterval(countdownIntervalRef.current);
-          if (user?.uid) {
-            window.sessionStorage.removeItem(`dismissed_fab_manual_${user.uid}`);
-            window.sessionStorage.removeItem(`dismissed_fab_support_${user.uid}`);
-          }
-          supabase.auth.signOut().then(() => {
-            setUser(null);
-            showAlert('Tu sesión ha expirado por inactividad por motivos de seguridad.', 'warning');
-          });
-          setShowInactivityWarning(false);
-        }
-      }, 1000);
-    }, Math.max(0, timeoutMs));
-  }, [user, securityConfig, showAlert, setUser]);
-
-  const handleResetInactivity = () => {
-    setShowInactivityWarning(false);
-    setWarningCountdown(30);
-    resetTimer();
-  };
-
-  const handleInactivityLogout = async () => {
-    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-    setShowInactivityWarning(false);
-    if (user?.uid || user?.id) {
-      const uId = user.uid || user.id;
-      window.sessionStorage.removeItem(`dismissed_fab_manual_${uId}`);
-      window.sessionStorage.removeItem(`dismissed_fab_support_${uId}`);
-    }
-    await supabase.auth.signOut();
-    setUser(null);
-    showAlert('Sesión cerrada correctamente.', 'success');
-  };
-
-  useEffect(() => {
-    if (!user) {
-      setSecurityConfig({ habilitado: false, timeoutMinutos: 15 });
-      setShowInactivityWarning(false);
-      return;
-    }
-
-    const loadSecurityConfig = async () => {
-      try {
-        const conf = await getConfigGeneral('security_config');
-        if (conf) {
-          setSecurityConfig(conf);
-        } else {
-          setSecurityConfig({ habilitado: true, timeoutMinutos: 30 });
-        }
-      } catch (err) {
-        setSecurityConfig({ habilitado: true, timeoutMinutos: 30 });
-      }
-    };
-    loadSecurityConfig();
-  }, [user]);
-
-  useEffect(() => {
-    if (!user || !securityConfig.habilitado) {
-      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-      return;
-    }
-
-    resetTimer();
-
-    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-    const handleActivity = () => {
-      setShowInactivityWarning(prev => {
-        if (!prev) {
-          resetTimer();
-        }
-        return prev;
-      });
-    };
-
-    events.forEach(event => window.addEventListener(event, handleActivity));
-
-    return () => {
-      events.forEach(event => window.removeEventListener(event, handleActivity));
-      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-    };
-  }, [user, securityConfig, resetTimer]);
+  // --- Hook Modular para Logout Automático por Inactividad (P2-9) ---
+  const {
+    showInactivityWarning,
+    warningCountdown,
+    handleResetInactivity,
+    handleInactivityLogout
+  } = useInactivityTimer(user, setUser, showAlert);
 
   // --- Estados y lógica para Botones Flotantes Arrastrables (Draggable) ---
   const dragThreshold = 5;
@@ -595,9 +497,10 @@ function CRMAppContent({ user, setUser }) {
     }
   };
 
-  const [loginEmail, setLoginEmail] = useState('admin@luxia.com');
-  const [loginPassword, setLoginPassword] = useState('luxia2026');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
@@ -606,50 +509,10 @@ function CRMAppContent({ user, setUser }) {
       const email = loginEmail.trim().toLowerCase();
       const password = loginPassword.trim();
 
-      // 1. Intentar inicio de sesión
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        // Si el usuario no existe aún en Supabase Auth, registrarlo automáticamente
-        if (error.message.includes('Invalid login credentials') || error.message.includes('User not found')) {
-          const roleFromEmail = email.includes('admin') ? 'superadmin' : (email.includes('supervisor') ? 'supervisor' : 'agente');
-          const nameFromEmail = email.split('@')[0];
-
-          const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                rol: roleFromEmail,
-                nombre: nameFromEmail,
-                equipo: 'Global',
-                pais: 'PE'
-              }
-            }
-          });
-
-          if (signUpErr) throw signUpErr;
-
-          if (signUpData?.user) {
-            // Asegurar creación en la tabla public.usuarios
-            await supabase.from('usuarios').upsert({
-              id: signUpData.user.id,
-              email,
-              nombre: nameFromEmail,
-              rol: roleFromEmail,
-              equipo: 'Global',
-              pais: 'PE',
-              activo: true
-            }, { onConflict: 'id' });
-
-            setUser({ ...signUpData.user, uid: signUpData.user.id });
-            showAlert(`Bienvenido ${email}. Cuenta creada y conectada como ${roleFromEmail}.`, 'success');
-            return;
-          }
-        }
+        // [SEC-002 FIX] No auto-registro. El alta de usuarios es exclusiva del panel Admin.
         throw error;
       }
 
@@ -659,11 +522,12 @@ function CRMAppContent({ user, setUser }) {
       }
     } catch (err) {
       console.error('[Login Error]', err);
-      showAlert(err.message || 'Error al iniciar sesión.', 'danger');
+      showAlert('Credenciales inválidas o cuenta inexistente.', 'danger');
     } finally {
       setLoginLoading(false);
     }
   };
+
 
   const handleGoogleOAuthLogin = async () => {
     try {
@@ -733,8 +597,10 @@ function CRMAppContent({ user, setUser }) {
             </button>
           </form>
 
+          {/* DEMO BUTTONS — [SEC-001 FIX] Solo visibles en entorno dev local */}
+          {import.meta.env.DEV && (
           <div className="border-top pt-3 text-start">
-            <span className="small text-muted fw-bold d-block mb-2"><i className="bi bi-person-badge me-1"></i> Accesos Rápidos de Prueba:</span>
+            <span className="small text-muted fw-bold d-block mb-2"><i className="bi bi-person-badge me-1"></i> Accesos Rápidos (Solo Dev):</span>
             <div className="d-flex gap-2 flex-wrap">
               <button 
                 type="button"
@@ -759,6 +625,7 @@ function CRMAppContent({ user, setUser }) {
               </button>
             </div>
           </div>
+          )}
         </div>
       </div>
     );

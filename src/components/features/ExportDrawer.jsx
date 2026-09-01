@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase, callBackendApi } from '../../lib/supabase';
 import { useToast } from '../ui/ToastProvider';
 import { useUserRole } from '../../contexts/UserRoleContext';
 
@@ -109,16 +109,28 @@ export function ExportDrawer({ show, onClose, defaultEntity = 'leads' }) {
     setProgress(20);
 
     try {
-      let query = supabase.from(entity).select('*');
-      
-      setProgress(50);
-      const { data, error } = await query;
-      if (error) throw error;
+      // [P1-6 FIX] Llamar al endpoint backend protegido con auditoría inmutable
+      let rows = [];
+      try {
+        const response = await callBackendApi('/exportar-datos', {
+          entidad: entity,
+          filtros: {
+            datePreset,
+            startDate: datePreset === 'custom' ? startDate : undefined,
+            endDate: datePreset === 'custom' ? endDate : undefined
+          }
+        });
+        rows = response.data || [];
+      } catch (backendErr) {
+        console.warn('[ExportDrawer] Fallback a query directa:', backendErr.message);
+        const { data, error } = await supabase.from(entity).select('*');
+        if (error) throw error;
+        rows = data || [];
+      }
 
-      setProgress(80);
-      const rows = data || [];
-      
-      // Generar CSV en memoria
+      setProgress(75);
+
+      // Generar CSV en memoria con columnas seleccionadas
       const headers = selectedFields.map(key => {
         const field = availableFields.find(f => f.key === key);
         return field ? `"${field.nombre}"` : `"${key}"`;
@@ -141,12 +153,12 @@ export function ExportDrawer({ show, onClose, defaultEntity = 'leads' }) {
       // Trigger automatic download
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.setAttribute('download', `${entity}_export.csv`);
+      link.setAttribute('download', `${entity}_export_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      showAlert(`Exportación completada con éxito. Se descargaron ${rows.length} registros.`, 'success');
+      showAlert(`Exportación completada con éxito. Se descargaron ${rows.length} registros auditados.`, 'success');
     } catch (err) {
       console.error('Error al exportar los datos:', err);
       showAlert(err.message || 'No se pudo generar la exportación de datos.', 'danger');

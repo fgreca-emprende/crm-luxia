@@ -48,14 +48,22 @@ function initCronJobs(supabase) {
         .lte('process_after', nowIso);
 
       if (buffers && buffers.length > 0) {
-        console.log(`[CRON] Procesando ${buffers.length} buffers de WhatsApp...`);
-        for (const buf of buffers) {
-          // Marcar como procesado
+        console.log(`[CRON] Procesando ${buffers.length} buffers de WhatsApp en batch...`);
+        const bufferIds = buffers.map(b => b.id).filter(Boolean);
+        const clienteIds = buffers.map(b => b.cliente_id).filter(Boolean);
+
+        if (bufferIds.length > 0) {
           await supabase
             .from('whatsapp_buffer')
-            .update({ status: 'completed' })
-            .eq('cliente_id', buf.cliente_id);
+            .update({ status: 'completed', updated_at: nowIso })
+            .in('id', bufferIds);
+        } else if (clienteIds.length > 0) {
+          await supabase
+            .from('whatsapp_buffer')
+            .update({ status: 'completed', updated_at: nowIso })
+            .in('cliente_id', clienteIds);
         }
+        console.log(`[CRON] ${buffers.length} buffers de WhatsApp completados en batch.`);
       }
     } catch (err) {
       console.error('[CRON] Error procesando buffers de WhatsApp:', err);

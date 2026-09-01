@@ -1,8 +1,8 @@
 import { supabase } from './supabase';
 
 /**
- * Registra de forma pasiva y asíncrona un evento de telemetría.
- * Diseñado para medir la adopción, el uso de IA y la eficacia operativa.
+ * Registra de forma asíncrona un evento de telemetría y auditoría operativa en logs_sistema.
+ * Cuenta con persistencia directa en PostgreSQL vía Supabase y fallback a localStorage.
  * 
  * @param {object} user - El objeto de usuario autenticado.
  * @param {string} action - La acción clave realizada (ej: 'trigger_ia', 'resolve_alert', 'add_interaction').
@@ -10,18 +10,30 @@ import { supabase } from './supabase';
  */
 export async function logSystemEvent(user, action, metadata = {}) {
   if (!user || !user.email) return;
-  
+
+  const eventPayload = {
+    usuario_email: user.email,
+    accion: action,
+    entidad: metadata.entidad || metadata.modulo || null,
+    entidad_id: metadata.entidadId || metadata.clienteId || metadata.leadId || null,
+    detalles: metadata,
+    timestamp: new Date().toISOString()
+  };
+
   try {
-    const queue = JSON.parse(localStorage.getItem('telemetry_queue') || '[]');
-    queue.push({
-      usuarioEmail: user.email,
-      usuarioNombre: user.user_metadata?.nombre || user.email.split('@')[0],
-      accion: action,
-      metadata: metadata,
-      timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('telemetry_queue', JSON.stringify(queue.slice(-50)));
-  } catch (e) {
-    console.warn('[Telemetry] Error guardando log en localStorage:', e);
+    // 1. Persistir en la tabla logs_sistema de Supabase
+    await supabase.from('logs_sistema').insert(eventPayload);
+  } catch (err) {
+    console.warn('[Telemetry] Fallback a localStorage por error en Supabase:', err.message);
+    try {
+      const queue = JSON.parse(localStorage.getItem('telemetry_queue') || '[]');
+      queue.push({
+        ...eventPayload,
+        usuarioNombre: user.user_metadata?.nombre || user.email.split('@')[0]
+      });
+      localStorage.setItem('telemetry_queue', JSON.stringify(queue.slice(-50)));
+    } catch (e) {
+      console.warn('[Telemetry] Error guardando en fallback localStorage:', e);
+    }
   }
 }

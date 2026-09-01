@@ -169,6 +169,8 @@ Devuelve un JSON con:
   });
 });
 
+const { sanitizeUserInput, sanitizeContext } = require('../utils/sanitize');
+
 // ============================================================================
 // 3. COPILOTO SENTINEL (Comandos por voz y consultas inteligentes)
 // ============================================================================
@@ -181,7 +183,15 @@ router.post('/copilot', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Prompt es requerido.' });
   }
 
-  const promptFinal = `Contexto del cliente: ${JSON.stringify(contexto || {})}\nComando/Consulta del operador: "${prompt}"`;
+  // [P1-8 FIX] Sanitizar inputs antes de inyectar en prompt de IA
+  const safePrompt = sanitizeUserInput(prompt, 2000);
+  const safeContext = sanitizeContext(contexto, 4000);
+
+  if (!safePrompt) {
+    return res.status(400).json({ error: 'El prompt contiene caracteres inválidos.' });
+  }
+
+  const promptFinal = `Contexto del cliente: ${JSON.stringify(safeContext)}\nComando/Consulta del operador: "${safePrompt}"`;
 
   const aiRes = await generateSentinelContent({
     agenteId: 'sentinel_copilot',
@@ -202,7 +212,15 @@ router.post('/soporte-agent', requireAuth, async (req, res) => {
   const supabase = req.app.get('supabase');
   const user = req.user;
 
-  const promptFinal = `El operador se encuentra en la pantalla "${seccionActual || 'General'}".\nPregunta: "${pregunta}"\nExplica paso a paso cómo realizar la acción en el CRM.`;
+  if (!pregunta) {
+    return res.status(400).json({ error: 'Pregunta es requerida.' });
+  }
+
+  // [P1-8 FIX] Sanitizar pregunta y sección
+  const safePregunta = sanitizeUserInput(pregunta, 1000);
+  const safeSeccion = sanitizeUserInput(seccionActual || 'General', 100);
+
+  const promptFinal = `El operador se encuentra en la pantalla "${safeSeccion}".\nPregunta: "${safePregunta}"\nExplica paso a paso cómo realizar la acción en el CRM.`;
 
   const aiRes = await generateSentinelContent({
     agenteId: 'sentinel_support',

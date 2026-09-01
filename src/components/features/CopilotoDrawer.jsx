@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { supabase } from '../../lib/supabase';
 import { getConfigGeneral } from '../../lib/configGeneral';
 import { useToast } from '../ui/ToastProvider';
+
+const DOMPURIFY_CONFIG = {
+  ALLOWED_TAGS: ['strong', 'em', 'a', 'span', 'i', 'li'],
+  ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+  ALLOW_DATA_ATTR: false,
+};
+
+const sanitize = (html) => DOMPurify.sanitize(html, DOMPURIFY_CONFIG);
 
 export function CopilotoDrawer({ show, onClose, client, lead, oportunidad, onActionExecuted }) {
   const [isListening, setIsListening] = useState(false);
@@ -211,7 +220,7 @@ export function CopilotoDrawer({ show, onClose, client, lead, oportunidad, onAct
   if (!show) return null;
 
   const formatResponse = (text) => {
-    if (!text) return '';
+    if (!text) return [];
     
     let safeText = text;
     if (Array.isArray(text)) {
@@ -223,33 +232,36 @@ export function CopilotoDrawer({ show, onClose, client, lead, oportunidad, onAct
     // Reemplazar la secuencia literal de caracteres "\n" por un salto de línea real
     safeText = safeText.replace(/\\n/g, '\n');
 
-    // SECURITY (Anti-XSS): Escapar caracteres HTML básicos antes de parsear markdown
-    let escapedText = safeText
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    return safeText.split('\n').map((line, idx) => {
+      // 1. Escapar HTML base para evitar inyección directa
+      let cleanLine = line
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 
-    return escapedText.split('\n').map((line, idx) => {
-      let cleanLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      // 2. Aplicar Markdown seguro (solo negrita)
+      cleanLine = cleanLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       
-      // Parsear enlaces en formato markdown [Texto](URL) a HTML, detectando si es archivo o link web normal
+      // 3. Parsear enlaces Markdown con validación estricta de URL
       cleanLine = cleanLine.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
-        // Prevenir esquemas de URL peligrosos (javascript:, data:, etc.)
         const lowerUrl = url.trim().toLowerCase();
-        if (lowerUrl.startsWith('javascript:') || lowerUrl.startsWith('data:') || lowerUrl.startsWith('vbscript:')) {
-          return `<span>${label}</span>`;
-        }
+        const BLOCKED = ['javascript:', 'data:', 'vbscript:', 'file:'];
+        if (BLOCKED.some(s => lowerUrl.startsWith(s))) return `<span>${label}</span>`;
+        if (!lowerUrl.startsWith('http://') && !lowerUrl.startsWith('https://')) return `<span>${label}</span>`;
         
-        const isFile = url.includes('firebasestorage') || url.includes('.pdf') || url.includes('.png') || url.includes('.jpg') || url.includes('.jpeg') || url.includes('.xlsx') || url.includes('.docx');
+        const isFile = /\.(pdf|png|jpg|jpeg|xlsx|docx)$/i.test(url) || url.includes('firebasestorage');
         const iconClass = isFile ? 'bi-file-earmark-arrow-down-fill text-success' : 'bi-box-arrow-up-right text-primary';
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="copilot-link"><i class="bi ${iconClass} fs-6"></i>${label}</a>`;
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer nofollow" class="copilot-link"><i class="bi ${iconClass} fs-6"></i>${label}</a>`;
       });
 
+      // 4. Sanitizar con DOMPurify ANTES de renderizar
+      const safeHtml = sanitize(cleanLine);
+
       // Detectar viñetas con o sin espacios iniciales
-      if (cleanLine.trim().startsWith('•') || cleanLine.trim().startsWith('*')) {
-        const content = cleanLine.trim().replace(/^[•*]\s*/, '');
+      if (line.trim().startsWith('•') || line.trim().startsWith('*')) {
+        const content = safeHtml.replace(/^[•*]\s*/, '');
         return (
           <li key={idx} className="mb-2 list-unstyled d-flex align-items-start text-dark" style={{ fontSize: '0.9rem' }}>
             <span className="text-primary me-2 fw-bold" style={{ fontSize: '1.1rem', marginTop: '-2px' }}>•</span>
@@ -257,7 +269,7 @@ export function CopilotoDrawer({ show, onClose, client, lead, oportunidad, onAct
           </li>
         );
       }
-      return <p key={idx} className="mb-2 text-dark" style={{ fontSize: '0.9rem' }} dangerouslySetInnerHTML={{ __html: cleanLine }} />;
+      return <p key={idx} className="mb-2 text-dark" style={{ fontSize: '0.9rem' }} dangerouslySetInnerHTML={{ __html: safeHtml }} />;
     });
   };
 
