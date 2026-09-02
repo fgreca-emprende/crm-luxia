@@ -21,8 +21,10 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Frontend Dependencies
-        run: npm ci
+      - name: Install Project & Server Dependencies
+        run: |
+          npm ci
+          npm ci --prefix server
 
       - name: Run ESLint Verification
         run: npm run lint
@@ -31,4 +33,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Execute Vitest Test Suite
+        env:
+          VITE_SUPABASE_URL: 'http://localhost:8000'
+          VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsaG9zdCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjIwMDAwMDAwMDB9.dummy'
         run: npm test
