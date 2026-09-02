@@ -316,9 +316,6 @@ export function FieldsConfigPanel() {
           <div className="col-xl-4 col-md-6">
             <DynamicFormPreview campos={campos} secciones={secciones} entidadPreview="oportunidad" />
           </div>
-          <div className="col-xl-4 col-md-6">
-            <DynamicFormPreview campos={campos} secciones={secciones} entidadPreview="ticket" />
-          </div>
         </div>
       ) : (
         /* === MODO CONFIGURACIÓN: DOS COLUMNAS === */

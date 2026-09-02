@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { generateLuxiaContent } = require('../services/luxiaCore');
+const { sanitizeUserInput, sanitizeContext } = require('../utils/sanitize');
 
 /**
  * Middleware para validar API Keys en llamadas a /api/v1/
@@ -35,7 +36,6 @@ async function validateApiKey(req, res, next) {
 // ============================================================================
 router.post('/public/web-to-lead', async (req, res) => {
   const supabase = req.app.get('supabase');
-const { sanitizeUserInput, sanitizeContext } = require('../utils/sanitize');
 
   const { nombreEmpresa, nombreContacto, correo, telefono, pais, camposDinamicos, formId } = req.body;
 

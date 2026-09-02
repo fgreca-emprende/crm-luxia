@@ -39,7 +39,6 @@ export function DynamicFormPreview({ campos, secciones, entidadPreview }) {
             entidadPreview === 'crm_actividad' ? 'bg-warning bg-opacity-10 text-warning border border-warning' :
             entidadPreview === 'lead' ? 'bg-success bg-opacity-10 text-success border border-success' :
             entidadPreview === 'oportunidad' ? 'bg-info bg-opacity-10 text-info border border-info' :
-            entidadPreview === 'ticket' ? 'bg-danger bg-opacity-10 text-danger border border-danger' :
             'bg-primary bg-opacity-10 text-primary border border-primary'
           } rounded-pill px-3 py-1`}>
             {entidadPreview === 'contrato' ? (
@@ -52,8 +51,6 @@ export function DynamicFormPreview({ campos, secciones, entidadPreview }) {
               <><i className="bi bi-person-plus me-1"></i>Lead</>
             ) : entidadPreview === 'oportunidad' ? (
               <><i className="bi bi-bar-chart-steps me-1"></i>Oportunidad</>
-            ) : entidadPreview === 'ticket' ? (
-              <><i className="bi bi-ticket-perforated me-1"></i>Ticket CX</>
             ) : (
               <><i className="bi bi-person me-1"></i>Cliente</>
             )}
