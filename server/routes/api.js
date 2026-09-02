@@ -129,16 +129,29 @@ router.post('/v1/leads', validateApiKey, async (req, res) => {
     return res.status(400).json({ error: 'Campos nombreEmpresa y correo son obligatorios.' });
   }
 
+  // [P1-8 FIX] Validar y sanitizar entradas
+  const emailClean = String(payload.correo).trim().toLowerCase();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(emailClean)) {
+    return res.status(400).json({ error: 'Formato de correo electrónico inválido.' });
+  }
+
+  const safeEmpresa = sanitizeUserInput(payload.nombreEmpresa, 200);
+  const safeContacto = sanitizeUserInput(payload.nombreContacto || '', 200);
+  const safeTelefono = sanitizeUserInput(payload.telefono || '', 50);
+  const safePais = sanitizeUserInput(payload.pais || 'PE', 5).toUpperCase();
+  const safeContext = sanitizeContext(payload.camposDinamicos || {}, 2000);
+
   const { data: lead, error } = await supabase.from('leads').insert({
-    nombre_empresa: payload.nombreEmpresa,
-    nombre_contacto: payload.nombreContacto || '',
-    correo: payload.correo,
-    telefono: payload.telefono || '',
-    pais: (payload.pais || 'PE').toUpperCase(),
-    industria: payload.industria || null,
+    nombre_empresa: safeEmpresa,
+    nombre_contacto: safeContacto,
+    correo: emailClean,
+    telefono: safeTelefono,
+    pais: safePais,
+    industria: sanitizeUserInput(payload.industria || '', 100) || null,
     origen: 'api_gateway',
     estado: 'nuevo',
-    campos_dinamicos: payload.camposDinamicos || {}
+    campos_dinamicos: safeContext
   }).select().single();
 
   if (error) {
@@ -146,6 +159,36 @@ router.post('/v1/leads', validateApiKey, async (req, res) => {
   }
 
   return res.status(201).json({ success: true, lead });
+});
+
+// ============================================================================
+// 3. ENDPOINT PROTEGIDO DE CONSULTA /v1/clientes (Alineación con OpenAPI)
+// ============================================================================
+router.get('/v1/clientes', validateApiKey, async (req, res) => {
+  const supabase = req.app.get('supabase');
+  const limit = Math.min(parseInt(req.query.limit || '50', 10), 200);
+  const offset = Math.max(parseInt(req.query.offset || '0', 10), 0);
+
+  try {
+    const { data: clientes, count, error } = await supabase
+      .from('clientes')
+      .select('id, nombre_empresa, cuit_rut_rfc, industria, sitio_web, estado, pais, comercial_email, created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    return res.json({
+      success: true,
+      total: count,
+      limit,
+      offset,
+      data: clientes || []
+    });
+  } catch (err) {
+    console.error('[API /v1/clientes Error]', err);
+    return res.status(500).json({ error: err.message || 'Error consultando lista de clientes.' });
+  }
 });
 
 module.exports = router;

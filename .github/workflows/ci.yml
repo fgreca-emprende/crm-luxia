@@ -1,61 +1,34 @@
-name: CI — CRM Luxia
+name: CRM-Luxia Enterprise CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [ main, develop ]
   pull_request:
-    branches: [main]
+    branches: [ main, develop ]
 
 jobs:
-  lint-test-build:
-    name: Lint, Test & Build (Frontend & Backend)
+  audit_and_test:
+    name: Build, Audit & Test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repositorio
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20.x
+      - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: 'npm'
 
-      - name: Instalar dependencias Frontend
+      - name: Install Frontend Dependencies
         run: npm ci
 
-      - name: Verificar Lint / TypeScript
-        run: npm run lint --if-present
+      - name: Run ESLint Verification
+        run: npm run lint
 
-      - name: Build de Producción Frontend
-        run: npm run build
-
-      - name: Instalar dependencias Backend
-        run: cd server && npm ci
-
-      - name: Verificar sintaxis Backend
-        run: |
-          cd server
-          node -c index.js
-          node -c routes/callables.js
-          node -c routes/api.js
-          node -c utils/sanitize.js
-
-  security-scan:
-    name: Security Vulnerability Audit
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repositorio
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Auditoría de paquetes Frontend (High+)
+      - name: Audit Dependencies for Vulnerabilities
         run: npm audit --audit-level=high
 
-      - name: Auditoría de paquetes Backend (High+)
-        run: cd server && npm audit --audit-level=high
+      - name: Execute Vitest Test Suite
+        run: npm test

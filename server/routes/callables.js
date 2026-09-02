@@ -266,17 +266,23 @@ router.post('/exportar-datos', requireAuth, async (req, res) => {
         .select('id, email')
         .eq('equipo', userTeam);
 
+      const teamIds = (teamUsers || []).map(u => u.id).filter(Boolean);
       const teamEmails = (teamUsers || []).map(u => u.email).filter(Boolean);
+
       if (entidad === 'leads') {
-        query = query.in('asignado_a', teamEmails.length > 0 ? teamEmails : [user.email]);
-      } else if (entidad === 'clientes' || entidad === 'oportunidades') {
+        query = query.or(`asignado_id.in.(${teamIds.join(',')}),asignado_a.in.(${teamEmails.map(e => `"${e}"`).join(',')})`);
+      } else if (entidad === 'clientes') {
+        query = query.or(`comercial_id.in.(${teamIds.join(',')}),comercial_email.in.(${teamEmails.map(e => `"${e}"`).join(',')})`);
+      } else if (entidad === 'oportunidades') {
         query = query.in('comercial_email', teamEmails.length > 0 ? teamEmails : [user.email]);
       }
     } else {
       // Agente / Lector / Editor
       if (entidad === 'leads') {
-        query = query.eq('asignado_a', user.email);
-      } else if (entidad === 'clientes' || entidad === 'oportunidades') {
+        query = query.or(`asignado_id.eq.${user.id},asignado_a.eq.${user.email}`);
+      } else if (entidad === 'clientes') {
+        query = query.or(`comercial_id.eq.${user.id},comercial_email.eq.${user.email}`);
+      } else if (entidad === 'oportunidades') {
         query = query.eq('comercial_email', user.email);
       }
     }

@@ -4,8 +4,8 @@ info:
   description: API Gateway para integraciones M2M bidireccionales con el CRM Empresarial de Luxia.
   version: 1.0.0
 servers:
-  - url: https://us-central1-tu-proyecto-firebase.cloudfunctions.net/api
-    description: Production Server (Firebase Cloud Functions)
+  - url: http://localhost:4000/api
+    description: Local Express API Gateway Worker Server
 
 components:
   securitySchemes:

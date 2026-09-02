@@ -94,14 +94,23 @@ const publicFormLimiter = rateLimit({
   message: { error: 'Demasiados envíos de formulario. Espera unos minutos.' }
 });
 
+// [OBS-01 FIX] Middleware de Request Correlation ID
+app.use((req, res, next) => {
+  const requestId = req.headers['x-request-id'] || (require('crypto').randomUUID ? require('crypto').randomUUID() : String(Date.now()));
+  req.requestId = requestId;
+  res.setHeader('X-Request-ID', requestId);
+  next();
+});
+
 app.use(generalLimiter);
 app.use('/api/copilot', aiLimiter);
 app.use('/api/soporte-agent', aiLimiter);
 app.use('/api/evaluar-examen', aiLimiter);
 app.use('/api/public/web-to-lead', publicFormLimiter);
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// [PERF-01 FIX] Límite de payload controlado a 1mb para prevenir DoS por heap exhaustion
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Inicialización del cliente Supabase Admin (Service Role)
 const supabaseUrl = process.env.SUPABASE_URL || 'http://localhost:8000';
