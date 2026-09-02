@@ -80,7 +80,7 @@ La base de datos Firestore está estructurada en colecciones raíz y subcoleccio
   ├── pais (string: PE | MX | CL | CO | AR)
   ├── faseComercial (string: adquisicion | retencion | onboarding | activo)
   ├── comercialId (string)
-  ├── searchTokens (array: iniciales y variaciones para Sentinel Search)
+  ├── searchTokens (array: iniciales y variaciones para Luxia Search)
   ├── healthScore (number: 0-100)
   ├── lastUpdated (timestamp)
   ├── /contratos/{contratoId}
@@ -198,11 +198,11 @@ Esta regla se garantiza en tres capas del sistema:
 
 ---
 
-## 04. Motor de Inteligencia Artificial (Sentinel Engine) [roles: admin, superadmin]
+## 04. Motor de Inteligencia Artificial (Luxia Engine) [roles: admin, superadmin]
 El CRM integra la API de Google Gemini para tareas de análisis, scoring, traducción y corrección.
 
-### Arquitectura de Agentes Sentinel
-1.  **Sentinel Lead Scorer:** Ejecuta la calificación IA de leads. Compara la información corporativa y transcripciones de la primera llamada con el ICP configurado. Retorna obligatoriamente un JSON plano sin comillas Markdown:
+### Arquitectura de Agentes Luxia
+1.  **Luxia Lead Scorer:** Ejecuta la calificación IA de leads. Compara la información corporativa y transcripciones de la primera llamada con el ICP configurado. Retorna obligatoriamente un JSON plano sin comillas Markdown:
     ```json
     {
       "score": 85,
@@ -214,8 +214,8 @@ El CRM integra la API de Google Gemini para tareas de análisis, scoring, traduc
       ]
     }
     ```
-2.  **Sentinel Risk Engine (Health Score):** Analiza la bitácora de interacciones de los últimos 60 días, tickets abiertos en CX, estados de onboarding y vigencia de contratos. Ejecuta una agregación weighted y corrección con Gemini para justificar variaciones.
-3.  **Sentinel Architect (Metrics Studio):** Traduce instrucciones en lenguaje natural en consultas y agregaciones estructuradas para el dashboard de KPIs.
+2.  **Luxia Risk Engine (Health Score):** Analiza la bitácora de interacciones de los últimos 60 días, tickets abiertos en CX, estados de onboarding y vigencia de contratos. Ejecuta una agregación weighted y corrección con Gemini para justificar variaciones.
+3.  **Luxia Architect (Metrics Studio):** Traduce instrucciones en lenguaje natural en consultas y agregaciones estructuradas para el dashboard de KPIs.
     *   *Few-Shot Context:* RAG técnico de estructuras de colecciones Firestore para evitar consultas inválidas.
     *   *Payload de Definición de KPI:*
         ```json
@@ -238,10 +238,10 @@ El CRM integra la API de Google Gemini para tareas de análisis, scoring, traduc
 4.  **Triage de Bitácora:** Filtra interacciones salientes antes de procesar por el Risk Engine para evitar sobrefacturación en llamadas de IA eliminando saludos e información vacía.
 
 ### Módulo FinOps & Presupuesto IA (Circuit Breaker)
-Al ejecutarse cualquier Cloud Function de IA (`supportAgent`, `sentinelScorer`, etc.), se incrementa de forma transaccional el costo del token consumido en `/config_ia/sentinel_usage`.
+Al ejecutarse cualquier Cloud Function de IA (`supportAgent`, `luxiaScorer`, etc.), se incrementa de forma transaccional el costo del token consumido en `/config_ia/luxia_usage`.
 *   *Lógica del Circuit Breaker:*
     ```javascript
-    const usageRef = db.collection("config_ia").doc("sentinel_usage");
+    const usageRef = db.collection("config_ia").doc("luxia_usage");
     const usageDoc = await usageRef.get();
     if (usageDoc.exists) {
       const usage = usageDoc.data();
@@ -305,4 +305,4 @@ Automatización y despliegue continuo de la base de conocimientos maestra de CRM
     *   Genera un hash SHA-256 a partir del contenido consolidado de todas las secciones.
     *   Compara este hash con `lastHash` en `/config_ia/rag_status`. Si son idénticos, devuelve `{ success: true, updated: false }` para abortar la indexación a coste cero.
     *   Si hay cambios, regenera los embeddings llamando al modelo `gemini-embedding-2`, limpia la colección `/documentacion_embeddings`, inserta los nuevos fragmentos vectorizados en lotes atómicos y actualiza `/config_ia/rag_status`.
-4.  **Auditor KB Dinámico (`onNegativeFeedbackCreated`):** Trigger de base de datos que se activa ante un feedback negativo del usuario. Carga en caliente la configuración del agente desde `/config_ia/sentinel_ia_auditor`, resuelve el modelo activo mediante `/config_ia_modelos` y formatea dinámicamente los marcadores de posición `{{originalInput}}`, `{{generatedOutput}}` y `{{correctedContent}}` en la instrucción del sistema antes de invocar a Gemini.
+4.  **Auditor KB Dinámico (`onNegativeFeedbackCreated`):** Trigger de base de datos que se activa ante un feedback negativo del usuario. Carga en caliente la configuración del agente desde `/config_ia/luxia_ia_auditor`, resuelve el modelo activo mediante `/config_ia_modelos` y formatea dinámicamente los marcadores de posición `{{originalInput}}`, `{{generatedOutput}}` y `{{correctedContent}}` en la instrucción del sistema antes de invocar a Gemini.

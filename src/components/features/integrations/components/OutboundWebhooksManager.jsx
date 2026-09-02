@@ -12,7 +12,7 @@ const AVAILABLE_EVENTS = [
   { id: 'oportunidad.created', label: 'Nueva Oportunidad Comercial' },
   { id: 'oportunidad.stage_changed', label: 'Cambio de Etapa en Pipeline' },
   { id: 'contrato.created', label: 'Alta de Acuerdo Comercial / Contrato' },
-  { id: 'despacho.notificacion', label: 'Notificación de Remito / Despacho a Campo' },
+  { id: 'entrega.notificacion', label: 'Notificación de Remito / Entrega a Campo' },
   { id: 'luxia_ia.alert_triggered', label: 'Disparo de Alerta de Riesgo IA' }
 ];
 

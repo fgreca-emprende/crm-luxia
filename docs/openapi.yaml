@@ -148,7 +148,7 @@ paths:
   /v1/leads:
     post:
       summary: Ingestar un nuevo prospecto (lead)
-      description: Registra un prospecto comercial en el CRM, realiza ruteo automático territorial (Territorial Round-Robin) y califica de forma reactiva con Sentinel IA.
+      description: Registra un prospecto comercial en el CRM, realiza ruteo automático territorial (Territorial Round-Robin) y califica de forma reactiva con Luxia IA.
       requestBody:
         required: true
         content:

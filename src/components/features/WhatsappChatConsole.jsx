@@ -286,7 +286,7 @@ export function WhatsappChatConsole({ clienteId, leadId, initialPhone }) {
       }
 
       setTextMessage(draft);
-      showAlert('Sugerencia de Sentinel Copilot cargada con éxito.', 'success');
+      showAlert('Sugerencia de Luxia Copilot cargada con éxito.', 'success');
     } catch (err) {
       console.error('Error fetching suggestion:', err);
       showAlert(`Copilot falló: ${err.message}`, 'danger');

@@ -7,7 +7,7 @@ El sistema **CRM-Luxia Enterprise** utiliza una arquitectura de datos relacional
 ## 1. Extensiones Habilitadas
 - `uuid-ossp` & `pgcrypto`: Generación de claves primarias UUID criptográficamente seguras (`gen_random_uuid()`).
 - `pg_trgm`: Búsquedas difusas de texto completo (*Fuzzy search*) con alta velocidad sobre nombres, razones sociales y emails.
-- `vector`: Soporte para embeddings vectoriales de 768 / 1536 dimensiones para la base de conocimiento RAG de Sentinel IA.
+- `vector`: Soporte para embeddings vectoriales de 768 / 1536 dimensiones para la base de conocimiento RAG de Luxia IA.
 
 ---
 
@@ -18,12 +18,12 @@ Vinculada con `auth.users` de Supabase para gestión de identidad, permisos y te
 - **`id`** (`UUID PRIMARY KEY`): Referencia a `auth.users(id)`.
 - **`email`** (`TEXT UNIQUE NOT NULL`): Correo institucional.
 - **`nombre`** (`TEXT`): Nombre completo del operador o ejecutivo.
-- **`rol`** (`TEXT NOT NULL`): `superadmin`, `admin`, `supervisor`, `agente`, `agente_cx`, `supervisor_cx`, `editor`, `lector`.
+- **`rol`** (`TEXT NOT NULL`): `superadmin`, `admin`, `supervisor`, `agente`, `editor`, `lector`.
 - **`equipo`** (`TEXT NOT NULL DEFAULT 'Global'`): Agrupación comercial/operativa (ej. `Ventas`, `Soporte`, `Finanzas`).
 - **`pais`** (`TEXT NOT NULL DEFAULT 'AR'`): País base (`AR`, `CL`, `PE`, `CO`, `MX`).
 - **`estado_cx`** (`TEXT DEFAULT 'activo'`): Disponibilidad operativa (`activo`, `break`, `ocupado`, `offline`).
 - **`estado_presencia`** (`TEXT DEFAULT 'Conectado'`): Estado de conexión en tiempo real.
-- **`capacitacion`** (`JSONB`): Estado y progreso en Sentinel Exam.
+- **`capacitacion`** (`JSONB`): Estado y progreso en Luxia Exam.
 - **`gamificacion`** (`JSONB`): Nivel, XP acumulado y medallas.
 
 ---
@@ -72,23 +72,11 @@ Gestión legal y financiera de los contratos vigentes e históricos asociados a 
 
 ---
 
-### 2.5 `tickets_cx` (Mesa de Ayuda & Atención al Cliente)
-- **`id`** (`UUID PRIMARY KEY DEFAULT gen_random_uuid()`): Número de ticket.
-- **`cliente_id`** (`TEXT REFERENCES clientes(id)`): Cuenta asociada.
-- **`asunto`** (`TEXT NOT NULL`): Título del requerimiento o incidente.
-- **`prioridad`** (`TEXT DEFAULT 'media'`): `baja`, `media`, `alta`, `urgente`.
-- **`estado`** (`TEXT DEFAULT 'abierto'`): `abierto`, `en_progreso`, `esperando_cliente`, `resuelto`, `cerrado`.
-- **`canal`** (`TEXT`): `whatsapp`, `email`, `portal`, `telefono`.
-- **`mensajes`** (`JSONB DEFAULT '[]'`): Hilo cronológico de mensajes públicos y notas internas (*whisper notes*).
-- **`csat`** (`JSONB`): Calificación y feedback post-atención.
-
----
-
 ### 2.6 `config_*` (Gobernanza y Centro de Control)
 - **`config_general`**: Tipos de cambio de divisas, reglas de retención y alertas globales.
 - **`config_permisos`**: Matriz de permisos RBAC y scopes de acceso (`ALL`, `TEAM`, `OWN`).
 - **`config_servicios`**: Catálogo de productos y líneas de negocio.
-- **`config_ia_modelos`** & **`config_ia_prompts`**: Modelos de Gemini autorizados, prompts de Sentinel IA y límites de consumo.
+- **`config_ia_modelos`** & **`config_ia_prompts`**: Modelos de Gemini autorizados, prompts de Luxia IA y límites de consumo.
 - **`rag_knowledge_base`**: Chunks de conocimiento con embeddings vectoriales para asistencia de IA.
 - **`api_keys`**: Credenciales para integraciones externas vía REST API (`x-api-key`).
 

@@ -24,16 +24,16 @@ async function run() {
   const newViews = {
     infraestructura: ['superadmin'],
     alertas_sistema: ['superadmin'],
-    dashboard_adopcion: ['lector', 'agente', 'supervisor', 'admin', 'superadmin', 'agente_cx', 'supervisor_cx'],
-    monitoreo_presencia: ['agente', 'supervisor', 'admin', 'superadmin', 'agente_cx', 'supervisor_cx']
+    dashboard_adopcion: ['lector', 'agente', 'supervisor', 'admin', 'superadmin'],
+    monitoreo_presencia: ['agente', 'supervisor', 'admin', 'superadmin']
   };
   
   const newActions = {
     asignar_responsable_comercial: ['admin', 'superadmin'],
     forzar_fase_comercial: ['admin', 'superadmin'],
-    editar_estado_presencia: ['supervisor', 'admin', 'superadmin', 'supervisor_cx'],
+    editar_estado_presencia: ['supervisor', 'admin', 'superadmin'],
     promover_superadmin: ['superadmin'],
-    configurar_copiloto: ['agente', 'supervisor', 'admin', 'superadmin', 'agente_cx', 'supervisor_cx'],
+    configurar_copiloto: ['agente', 'supervisor', 'admin', 'superadmin'],
     adicionar_adenda_renovacion: ['supervisor', 'admin', 'superadmin'],
     operar_tarea_crm: ['agente', 'supervisor', 'admin', 'superadmin']
   };

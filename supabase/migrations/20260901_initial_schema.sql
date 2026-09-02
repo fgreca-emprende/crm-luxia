@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT UNIQUE NOT NULL,
     nombre TEXT,
-    rol TEXT NOT NULL DEFAULT 'lector' CHECK (rol IN ('superadmin', 'admin', 'supervisor', 'agente', 'lector', 'agente_cx', 'supervisor_cx', 'editor')),
+    rol TEXT NOT NULL DEFAULT 'lector' CHECK (rol IN ('superadmin', 'admin', 'supervisor', 'agente', 'lector', 'editor')),
     equipo TEXT NOT NULL DEFAULT 'Global',
     pais TEXT NOT NULL DEFAULT 'PE',
     activo BOOLEAN NOT NULL DEFAULT TRUE,
@@ -321,7 +321,7 @@ CREATE TABLE IF NOT EXISTS public.config_permisos (
 );
 
 -- ==============================================================================
--- 13. CONFIGURACIÓN DE SENTINEL IA Y MODELOS
+-- 13. CONFIGURACIÓN DE LUXIA IA Y MODELOS
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.config_ia_modelos (
     id TEXT PRIMARY KEY,
@@ -341,7 +341,7 @@ CREATE TABLE IF NOT EXISTS public.config_ia_modelos (
 );
 
 CREATE TABLE IF NOT EXISTS public.config_ia (
-    id TEXT PRIMARY KEY, -- 'sentinel', 'sentinel_lead_scorer', 'sentinel_support', etc.
+    id TEXT PRIMARY KEY, -- 'luxia', 'luxia_lead_scorer', 'luxia_support', etc.
     nombre TEXT NOT NULL,
     system_prompt TEXT NOT NULL,
     model_name TEXT NOT NULL DEFAULT 'gemini-2.5-flash',
@@ -408,7 +408,7 @@ CREATE TABLE IF NOT EXISTS public.examenes_intentos (
     feedback_practico TEXT,
     score_global NUMERIC,
     aprobado BOOLEAN DEFAULT FALSE,
-    evaluado_por TEXT DEFAULT 'sentinel_ia',
+    evaluado_por TEXT DEFAULT 'luxia_ia',
     estado TEXT DEFAULT 'pendiente',
     processed BOOLEAN DEFAULT FALSE
 );

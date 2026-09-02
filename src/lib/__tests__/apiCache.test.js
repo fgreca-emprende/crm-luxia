@@ -12,8 +12,8 @@ const mockStorage = (() => {
   };
 })();
 
-global.sessionStorage = mockStorage;
-global.window = {
+globalThis.sessionStorage = mockStorage;
+globalThis.window = {
   dispatchEvent: () => {}
 };
 

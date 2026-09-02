@@ -11,7 +11,7 @@ Bienvenido al **Manual de Operaciones de LUXIA® Agro**. Este documento constitu
 
 #### Objetivos Clave de la Plataforma:
 1. **Digitalizar el Ciclo Comercial a Campo**: Desde el descubrimiento del lote y la prescripción agronómica hasta la firma de acuerdos de suministro.
-2. **Prevenir Riesgos y Churn con Inteligencia Artificial**: A través del motor **LUXIA IA**, que audita deudas, discrepancias en liquidaciones de Canje Cereal y demoras en despachos críticos de campaña.
+2. **Prevenir Riesgos y Churn con Inteligencia Artificial**: A través del motor **LUXIA IA**, que audita deudas, discrepancias en liquidaciones de Canje Cereal y demoras en entregas críticas de campaña.
 3. **Visibilidad 360° de Productores y Distribuidores**: Consolidar en un solo perfil la superficie sembrada (hectáreas), cultivos principales (soja, maíz, trigo, girasol), historial de compras y contactos técnicos y financieros.
 
 ---
@@ -63,7 +63,7 @@ La tabla de **Clientes de Cartera** proporciona una vista unificada de todas las
 #### 4.2 Monitor de Salud (Health Score LUXIA IA):
 El motor LUXIA IA audita continuamente la cuenta calculando un índice de salud (0 a 100):
 * 🟢 **Green (75-100 pts)**: Cuenta saludable, sin deudas vencidas, entregas a término y cumplimiento de volumen.
-* 🟡 **Yellow (40-74 pts)**: Señales de alerta preventiva (garantías pendientes, mora <15 días o demoras moderadas en despachos).
+* 🟡 **Yellow (40-74 pts)**: Señales de alerta preventiva (garantías pendientes, mora <15 días o demoras moderadas en entregas).
 * 🔴 **Red (0-39 pts)**: Riesgo crítico de Churn o incobrabilidad (facturas >60 días, discrepancias graves en liquidación de Canje Cereal o rescisión de contrato).
 
 ---
@@ -75,7 +75,7 @@ El **Tablero de Onboarding** gestiona los hitos operativos y técnicos necesario
 #### 5.1 Hitos Típicos de Campaña:
 1. **Alta de Legajo y Validación SISA/Crediticia**: Verificación de solvencia y garantías.
 2. **Definición de Receta Agronómica y Lotes**: Determinación de productos, dosis por hectárea y fechas estimadas de aplicación.
-3. **Programación Logística y Despacho**: Coordinación de camiones, remitos y entrega de fitosanitarios a campo o depósito.
+3. **Programación Logística y Entrega**: Coordinación de camiones, remitos y entrega de fitosanitarios a campo o depósito.
 4. **Confirmación de Recepción y Ensayo**: Firma de remito y monitoreo inicial de eficacia biológica.
 5. **Liquidación de Canje / Cobranza**: Cierre financiero contra entrega de cereal o pago convenido.
 

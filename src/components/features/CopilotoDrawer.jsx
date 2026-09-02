@@ -209,7 +209,7 @@ export function CopilotoDrawer({ show, onClose, client, lead, oportunidad, onAct
       } else {
         finalResponse = {
           success: true,
-          response: `Analizado por Sentinel Copilot: "${textToSend}" para ${entityName}.`,
+          response: `Analizado por Luxia Copilot: "${textToSend}" para ${entityName}.`,
           quick_action: {
             label: `Completar acción sobre ${entityName}`,
             tipo: 'nota',

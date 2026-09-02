@@ -1,6 +1,6 @@
 # Arquitectura y Principios del Sistema CRM-Luxia Enterprise
 
-Este documento establece la "fuente de la verdad" técnica y funcional para la arquitectura, los patrones de diseño y los principios fundamentales que rigen el ecosistema **CRM-Luxia Enterprise** (con motor de inteligencia analítica **Sentinel IA** y base de datos relacional **PostgreSQL en Supabase**).
+Este documento establece la "fuente de la verdad" técnica y funcional para la arquitectura, los patrones de diseño y los principios fundamentales que rigen el ecosistema **CRM-Luxia Enterprise** (con motor de inteligencia analítica **Luxia IA** y base de datos relacional **PostgreSQL en Supabase**).
 
 ---
 
@@ -14,12 +14,12 @@ La interfaz de usuario sigue los lineamientos de diseño de alta gama de **Apple
 - **Micro-interacciones Fluidas:** Curvas de aceleración tipo resorte Apple (`cubic-bezier(0.16, 1, 0.3, 1)`), baliza pulsante de presencia y transiciones visuales instantáneas.
 - **Navegación Móvil Adaptativa:** Menú tipo *Sheet* deslizable con desenfoque de fondo para dispositivos móviles y tablets.
 
-### 1.2 IA-First (Sentinel IA Integrado)
-Sentinel IA es el motor de inteligencia analítica y operativa del CRM:
-- **Modelos Multimodales:** Potenciado por Google Gemini (`gemini-2.5-flash`, `gemini-1.5-pro`, etc.) configurados y versionados dinámicamente en la tabla `config_ia_modelos`.
+### 1.2 IA-First (Luxia IA Integrado)
+Luxia IA es el motor de inteligencia analítica y operativa del CRM:
+- **Modelos Multimodales:** Potenciado por Google Gemini (`gemini-3.5-flash`, `gemini-3.6-flash`, etc.) configurados y versionados dinámicamente en la tabla `config_ia_modelos`.
 - **Agentes Especializados:** Evaluación predictiva de Health Score, transcripción y análisis de llamadas Meet, copiloto conversacional, auditoría de tickets CX, generador de resúmenes y exámenes de capacitación.
 - **Resiliencia y Degradación Graciosa:** Cada agente puede pausarse o reactivarse de forma granular desde la interfaz administrativa (`AdminIaModelsManager.jsx`).
-- **Límites de Presupuesto y Safeguards:** Detección de cuotas y modo manual preventivo (`sentinelPausado`).
+- **Límites de Presupuesto y Safeguards:** Detección de cuotas y modo manual preventivo (`luxiaPausado`).
 
 ### 1.3 Arquitectura de Datos Relacional (PostgreSQL en Supabase)
 Toda la persistencia de datos opera sobre **PostgreSQL**:
@@ -52,14 +52,14 @@ Toda la persistencia de datos opera sobre **PostgreSQL**:
 ┌──────────────────────────────────────────────┐   ┌──────────────────────────────────────┐
 │        SUPABASE (PostgreSQL + RLS)           │   │    BACKEND WORKER (Node.js/Express)  │
 │  - Tablas: clientes, leads, oportunidades,   │◀──┤  - Cron Jobs & Sincronizaciones      │
-│    contratos, tickets_cx, usuarios, etc.     │   │  - Invocaciones a Google Gemini      │
+│    contratos, actividades, usuarios, etc.     │   │  - Invocaciones a Google Gemini      │
 │  - Políticas RLS por Rol y Equipo            │   │  - Webhooks WhatsApp / Slack         │
 │  - Supabase Auth (JWT & Sesiones)            │   │  - API Gateway Inbound / Outbound    │
 └──────────────────────────────────────────────┘   └──────────────────┬───────────────────┘
                                                                       │ (AI Prompts & RAG)
                                                                       ▼
                                                    ┌──────────────────────────────────────┐
-                                                   │       GOOGLE GEMINI (Sentinel IA)    │
+                                                   │        GOOGLE GEMINI (Luxia IA)      │
                                                    └──────────────────────────────────────┘
 ```
 
@@ -78,7 +78,7 @@ crm-luxia/
 │   ├── components/
 │   │   ├── features/           # Vistas funcionales (Dashboard, Leads, Clientes, CX, etc.)
 │   │   │   ├── admin/          # Centro de Control Administrativo (Permisos, IA, etc.)
-│   │   │   ├── capacitacion/   # Módulo de Auto Capacitación con Sentinel Exam
+│   │   │   ├── capacitacion/   # Módulo de Auto Capacitación con Luxia Exam
 │   │   │   ├── contratos/      # Gestión y ciclo de vida de contratos
 │   │   │   ├── cx/             # Componentes de soporte omnicanal
 │   │   │   ├── dashboard/      # Paneles y widgets de analítica

@@ -3,6 +3,65 @@ import { supabase } from '../lib/supabase';
 
 const UserRoleContext = createContext(null);
 
+const DEFAULT_ACTIONS = {
+  alta_masiva_registros: ['supervisor', 'admin', 'superadmin'],
+  exportar_leads: ['supervisor', 'admin', 'superadmin'],
+  exportar_oportunidades: ['supervisor', 'admin', 'superadmin'],
+  exportar_clientes: ['supervisor', 'admin', 'superadmin'],
+  crear_lead: ['agente', 'supervisor', 'admin', 'superadmin'],
+  editar_lead: ['agente', 'supervisor', 'admin', 'superadmin'],
+  crear_oportunidad: ['supervisor', 'admin', 'superadmin'],
+  editar_oportunidad: ['agente', 'supervisor', 'admin', 'superadmin'],
+  crear_contrato: ['supervisor', 'admin', 'superadmin'],
+  editar_contrato: ['supervisor', 'admin', 'superadmin'],
+  registrar_cliente_local: ['supervisor', 'admin', 'superadmin'],
+  editar_cliente: ['supervisor', 'admin', 'superadmin'],
+  eliminar_lead: ['superadmin'],
+  eliminar_oportunidad: ['superadmin'],
+  eliminar_cliente: ['superadmin'],
+  asignar_responsable_comercial: ['admin', 'superadmin'],
+  forzar_fase_comercial: ['admin', 'superadmin'],
+  editar_estado_presencia: ['supervisor', 'admin', 'superadmin'],
+  promover_superadmin: ['superadmin'],
+  configurar_copiloto: ['agente', 'supervisor', 'admin', 'superadmin'],
+  adicionar_adenda_renovacion: ['supervisor', 'admin', 'superadmin'],
+  operar_tarea_crm: ['agente', 'supervisor', 'admin', 'superadmin', 'editor'],
+  operar_onboarding_checklist: ['agente', 'supervisor', 'admin', 'superadmin', 'editor'],
+  enviar_mensajes_whatsapp: ['agente', 'supervisor', 'admin', 'superadmin', 'editor'],
+  disparar_ia: ['agente', 'supervisor', 'admin', 'superadmin'],
+  eliminar_contrato: ['superadmin'],
+  configurar_logout: ['superadmin'],
+  configurar_luxia_ia: ['superadmin'],
+  configurar_modelos_ia: ['superadmin'],
+  configurar_presupuesto_whatsapp: ['superadmin'],
+  rendir_examen: ['lector', 'agente', 'supervisor', 'admin', 'superadmin'],
+  forzar_sincronizacion_infra: ['superadmin'],
+  calificar_lead: ['agente', 'supervisor', 'admin', 'superadmin'],
+  asignar_lead_manual: ['supervisor', 'admin', 'superadmin'],
+  agendar_meet: ['agente', 'supervisor', 'admin', 'superadmin'],
+  crear_formulario_web: ['admin', 'superadmin'],
+  referencia_tecnica: ['superadmin', 'admin'],
+  configuracion_pipeline: ['superadmin', 'admin'],
+  configuracion_onboarding: ['superadmin', 'admin'],
+  configuracion_servicios: ['superadmin', 'admin'],
+  configuracion_negocio: ['superadmin', 'admin', 'lector'],
+  configuracion_usuarios: ['superadmin', 'admin'],
+  configuracion_equipos: ['superadmin', 'admin'],
+  configuracion_capacitacion: ['superadmin', 'admin'],
+  configuracion_metrics_studio: ['superadmin', 'admin'],
+  configuracion_integraciones: ['superadmin', 'admin']
+};
+
+const DEFAULT_SCOPES = {
+  leads: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
+  oportunidades: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
+  clientes: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
+  tablero: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'OWN' },
+  alertas: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
+  capacitacion: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'OWN' },
+  consumo_ia: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'NONE' }
+};
+
 export function UserRoleProvider({ user, children }) {
   const [role, setRole] = useState('lector');
   const [matrix, setMatrix] = useState(null);
@@ -96,64 +155,7 @@ export function UserRoleProvider({ user, children }) {
     };
   }, [user]);
 
-  const DEFAULT_ACTIONS = {
-    alta_masiva_registros: ['supervisor', 'admin', 'superadmin'],
-    exportar_leads: ['supervisor', 'admin', 'superadmin'],
-    exportar_oportunidades: ['supervisor', 'admin', 'superadmin'],
-    exportar_clientes: ['supervisor', 'admin', 'superadmin'],
-    crear_lead: ['agente', 'supervisor', 'admin', 'superadmin'],
-    editar_lead: ['agente', 'supervisor', 'admin', 'superadmin'],
-    crear_oportunidad: ['supervisor', 'admin', 'superadmin'],
-    editar_oportunidad: ['agente', 'supervisor', 'admin', 'superadmin'],
-    crear_contrato: ['supervisor', 'admin', 'superadmin'],
-    editar_contrato: ['supervisor', 'admin', 'superadmin'],
-    registrar_cliente_local: ['supervisor', 'admin', 'superadmin'],
-    editar_cliente: ['supervisor', 'admin', 'superadmin'],
-    eliminar_lead: ['superadmin'],
-    eliminar_oportunidad: ['superadmin'],
-    eliminar_cliente: ['superadmin'],
-    asignar_responsable_comercial: ['admin', 'superadmin'],
-    forzar_fase_comercial: ['admin', 'superadmin'],
-    editar_estado_presencia: ['supervisor', 'admin', 'superadmin'],
-    promover_superadmin: ['superadmin'],
-    configurar_copiloto: ['agente', 'supervisor', 'admin', 'superadmin'],
-    adicionar_adenda_renovacion: ['supervisor', 'admin', 'superadmin'],
-    operar_tarea_crm: ['agente', 'supervisor', 'admin', 'superadmin', 'editor'],
-    operar_onboarding_checklist: ['agente', 'supervisor', 'admin', 'superadmin', 'editor'],
-    enviar_mensajes_whatsapp: ['agente', 'supervisor', 'admin', 'superadmin', 'editor'],
-    disparar_ia: ['agente', 'supervisor', 'admin', 'superadmin'],
-    eliminar_contrato: ['superadmin'],
-    configurar_logout: ['superadmin'],
-    configurar_luxia_ia: ['superadmin'],
-    configurar_modelos_ia: ['superadmin'],
-    configurar_presupuesto_whatsapp: ['superadmin'],
-    rendir_examen: ['lector', 'agente', 'supervisor', 'admin', 'superadmin'],
-    forzar_sincronizacion_infra: ['superadmin'],
-    calificar_lead: ['agente', 'supervisor', 'admin', 'superadmin'],
-    asignar_lead_manual: ['supervisor', 'admin', 'superadmin'],
-    agendar_meet: ['agente', 'supervisor', 'admin', 'superadmin'],
-    crear_formulario_web: ['admin', 'superadmin'],
-    referencia_tecnica: ['superadmin', 'admin'],
-    configuracion_pipeline: ['superadmin', 'admin'],
-    configuracion_onboarding: ['superadmin', 'admin'],
-    configuracion_servicios: ['superadmin', 'admin'],
-    configuracion_negocio: ['superadmin', 'admin', 'lector'],
-    configuracion_usuarios: ['superadmin', 'admin'],
-    configuracion_equipos: ['superadmin', 'admin'],
-    configuracion_capacitacion: ['superadmin', 'admin'],
-    configuracion_metrics_studio: ['superadmin', 'admin'],
-    configuracion_integraciones: ['superadmin', 'admin']
-  };
 
-  const DEFAULT_SCOPES = {
-    leads: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
-    oportunidades: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
-    clientes: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
-    tablero: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'OWN' },
-    alertas: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'ALL' },
-    capacitacion: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'OWN' },
-    consumo_ia: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'OWN', editor: 'NONE' }
-  };
 
   const hasPermission = useCallback((typeOrActionKey, maybeActionKey) => {
     if (role === 'superadmin') return true;

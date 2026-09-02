@@ -10,7 +10,7 @@ const DEFAULT_ONBOARDING_TASKS = [
   { id: 'relevamiento_agronomico_lotes', titulo: 'Relevamiento Agronómico y Plan de Campaña', orden: 2, paises: ['Global'], servicios: ['Global'] },
   { id: 'asesoramiento_tecnico_manejo', titulo: 'Asesoramiento Técnico y Calibración de Dosis', orden: 3, paises: ['Global'], servicios: ['Global'] },
   { id: 'coordinacion_logistica_destino', titulo: 'Coordinación Logística y Depósito de Destino', orden: 4, paises: ['Global'], servicios: ['Global'] },
-  { id: 'primer_despacho_entrega', titulo: 'Primer Despacho y Entrega en Establecimiento', orden: 5, paises: ['Global'], servicios: ['Global'] },
+  { id: 'primera_entrega_suministro', titulo: 'Primera Entrega de Suministro en Establecimiento', orden: 5, paises: ['Global'], servicios: ['Global'] },
   { id: 'monitoreo_campo_30_dias', titulo: 'Monitoreo a Campo y Evaluación de Eficacia (30 días)', orden: 6, paises: ['Global'], servicios: ['Global'] },
 ];
 

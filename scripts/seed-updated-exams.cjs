@@ -38,7 +38,7 @@ const examsCatalog = {
         opciones: [
           "Acceso exclusivo de sólo lectura a clientes, bitácoras, tablero y contratos, sin permisos de escritura ni mutación",
           "Permisos de lectura y creación de notas manuales de bitácora",
-          "Permisos de configuración de Sentinel IA y pausa de presupuestos FinOps",
+          "Permisos de configuración de Luxia IA y pausa de presupuestos FinOps",
           "Creación de clientes y oportunidades pero sin acceso a exportaciones"
         ],
         correcta: 0
@@ -67,7 +67,7 @@ const examsCatalog = {
       },
       {
         id: "q4",
-        pregunta: "¿Dónde se consultan las justificaciones del análisis de salud generadas históricamente por Sentinel IA?",
+        pregunta: "¿Dónde se consultan las justificaciones del análisis de salud generadas históricamente por Luxia IA?",
         opciones: [
           "En la línea de tiempo (timeline) de salud y bitácora de la ficha del cliente",
           "En la consola de API Keys de integraciones",
@@ -161,7 +161,7 @@ const examsCatalog = {
     teorico: [
       {
         id: "q1",
-        pregunta: "¿Cómo califica Sentinel IA la prospección de un nuevo Lead ingresado al CRM?",
+        pregunta: "¿Cómo califica Luxia IA la prospección de un nuevo Lead ingresado al CRM?",
         opciones: [
           "Asigna un puntaje de 0 a 100, prioridad (Green/Yellow/Red) y un análisis descriptivo del encaje con el ICP del país",
           "Verifica si el correo electrónico tiene contraseña válida",
@@ -272,7 +272,7 @@ const examsCatalog = {
     ],
     practico: {
       id: "p1",
-      pregunta: "Un lead de un cliente corporativo de Retail en México ingresa al CRM. Describe paso a paso cómo lo evaluarías con Sentinel Scorer, cómo lo moverías a través del Pipeline aplicando Gatekeeping y qué datos registrarías al cerrarlo como Ganado.",
+      pregunta: "Un lead de un cliente corporativo de Retail en México ingresa al CRM. Describe paso a paso cómo lo evaluarías con Luxia Scorer, cómo lo moverías a través del Pipeline aplicando Gatekeeping y qué datos registrarías al cerrarlo como Ganado.",
       criteriosEvaluacion: [
         "Ejecutar el scoring IA y revisar el score numérico y prioridad Green/Yellow/Red",
         "Demostrar el cumplimiento de los campos de Gatekeeping requeridos por la etapa",
@@ -321,7 +321,7 @@ const examsCatalog = {
       },
       {
         id: "q4",
-        pregunta: "¿Cómo se resuelve formalmente una Alerta de Riesgo comercial generada por Sentinel IA?",
+        pregunta: "¿Cómo se resuelve formalmente una Alerta de Riesgo comercial generada por Luxia IA?",
         opciones: [
           "Redactando una nota de auditoría comercial obligatoria detallando las acciones de retención realizadas",
           "Haciendo clic en el botón de eliminar alerta sin justificación",
@@ -332,7 +332,7 @@ const examsCatalog = {
       },
       {
         id: "q5",
-        pregunta: "Tras resolver una Alerta de Riesgo, ¿qué mecanismo de protección de Sentinel se activa?",
+        pregunta: "Tras resolver una Alerta de Riesgo, ¿qué mecanismo de protección de Luxia se activa?",
         opciones: [
           "Entra en un periodo de enfriamiento (cooldown) de 24 horas para evitar resoluciones repetidas accidentales",
           "La alerta se vuelve a activar inmediatamente cada 5 minutos",
@@ -381,7 +381,7 @@ const examsCatalog = {
           "Únicamente los leads, oportunidades y cuentas asignadas a su propia autoría o registros sin asignar del país",
           "Todos los clientes y datos financieros de la empresa a nivel global",
           "Los datos de los clientes de otros Account Managers de la competencia",
-          "Únicamente las métricas de consumo de la IA Sentinel"
+          "Únicamente las métricas de consumo de la IA Luxia"
         ],
         correcta: 0
       },
@@ -481,208 +481,7 @@ const examsCatalog = {
     }
   },
 
-  // 5. AGENTE CX - BÁSICO
-  agente_cx_basico: {
-    rol: "agente_cx",
-    dificultad: "basico",
-    teorico: [
-      {
-        id: "q1",
-        pregunta: "¿Qué representan los indicadores de SLA FRT y RT en la bandeja de tickets de CX?",
-        opciones: [
-          "FRT: First Response Time (Tiempo de Primera Respuesta); RT: Resolution Time (Tiempo de Resolución)",
-          "FRT: Fast Route Ticket; RT: Return Time",
-          "FRT: Full Resolution Time; RT: Reopen Time",
-          "FRT: Fleet Registration Target; RT: Regional Team"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q2",
-        pregunta: "¿Cuáles son las 3 secciones principales del diseño Tri-Panel de la bandeja `CxInboxView`?",
-        opciones: [
-          "Izquierda (Lista de tickets ordenados por SLA), Centro (Chat e interacciones), Derecha (Detalle de cuenta, SLAs y tipificación)",
-          "Izquierda (Navegación general), Centro (Google Maps), Derecha (Consola de IA)",
-          "Izquierda (Lista de clientes), Centro (Editor de código), Derecha (Métricas)",
-          "Izquierda (Fichas), Centro (Lista de correos), Derecha (Alertas de seguridad)"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q3",
-        pregunta: "Si un ticket pertenece a un cliente etiquetado como VIP, ¿cómo aplica el sistema las reglas de SLA?",
-        opciones: [
-          "Aplica un multiplicador de 0.5x, reduciendo el tiempo límite a la mitad y posicionando el ticket al inicio de la bandeja",
-          "Desactiva los relojes de SLA para no presionar al agente",
-          "Deriva el ticket de forma inmediata al SuperAdmin",
-          "Asigna automáticamente el ticket como Resuelto"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q4",
-        pregunta: "¿Cuáles son los 3 frentes de atención soportados en la recepción de tickets de CX?",
-        opciones: [
-          "VIP (Clientes corporativos), Final (Destinatarios de envíos) y Drivers (Flotas de transporte)",
-          "Ventas, Marketing y Cobranzas",
-          "Soporte L1, Soporte L2 y Soporte L3",
-          "WhatsApp, Email y Teléfono"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q5",
-        pregunta: "¿Qué diferencia existe entre enviar una respuesta pública y guardar un Susurro en un ticket de CX?",
-        opciones: [
-          "La respuesta pública se despacha al cliente/creador; el susurro es una nota interna privada visible solo para el equipo",
-          "El susurro se envía por SMS y la respuesta pública por correo",
-          "La respuesta pública congela el SLA y el susurro lo acelera",
-          "No hay diferencia, ambos son visibles para el cliente final"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q6",
-        pregunta: "¿Cómo asiste Sentinel Copilot CX al agente durante la redacción de respuestas?",
-        opciones: [
-          "Analiza la tipificación y el historial de mensajes para sugerir respuestas formales de solución o disculpa en un clic",
-          "Traduce automáticamente los correos a lenguaje de señas",
-          "Resuelve el ticket sin requerir interacción del agente",
-          "Copia la respuesta del último ticket cerrado"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q7",
-        pregunta: "Al marcar un ticket como 'Resuelto', ¿qué dato es obligatorio seleccionar antes de confirmar?",
-        opciones: [
-          "El Motivo de Cierre / Tipificación final del problema",
-          "La nota del examen de capacitación del agente",
-          "El enlace de Google Drive de la cuenta",
-          "La tasa de cambio del dólar del día"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q8",
-        pregunta: "¿Qué sucede con los relojes de SLA cuando un ticket pasa al estado 'pending_customer'?",
-        opciones: [
-          "El cronómetro de SLA se pausa temporalmente a la espera de la respuesta del usuario para no perjudicar la métrica",
-          "El SLA vence automáticamente en 5 minutos",
-          "Se cancela la asignación del agente en la cola",
-          "El ticket se elimina de la base de datos"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q9",
-        pregunta: "¿Qué desencadena automáticamente la resolución de un ticket en relación con la satisfacción del cliente?",
-        opciones: [
-          "Encola el envío de un correo SMTP con la plantilla de encuesta CSAT para evaluar la atención",
-          "Otorga 500 XP al cliente en el Leaderboard",
-          "Cambia el estado comercial del cliente a Inactivo",
-          "Envía un mensaje de texto al conductor de la flota"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q10",
-        pregunta: "¿Cómo se visualiza un ticket cuyo tiempo de respuesta de SLA está próximo a vencer?",
-        opciones: [
-          "El badge del reloj cambia a color rojo resaltado con indicador de alerta de urgencia",
-          "El ticket desaparece de la vista del agente",
-          "La pantalla del CRM se bloquea por completo",
-          "Se cambia el rol del agente a Lector"
-        ],
-        correcta: 0
-      }
-    ],
-    practico: {
-      id: "p1",
-      pregunta: "Un cliente corporativo VIP reporta que 10 paquetes de valor elevado figuran como 'Entregados' en la plataforma, pero la tienda receptora niega haberlos recibido. Describe detalladamente cómo utilizarías el tri-panel de CX, los susurros internos, Sentinel Copilot y las reglas de SLA VIP para gestionar la incidencia.",
-      criteriosEvaluacion: [
-        "Identificar el tratamiento preferencial por SLA VIP (multiplicador 0.5x)",
-        "Utilizar susurros internos para coordinar con el equipo de Operaciones/Fleet",
-        "Redactar una respuesta empática al cliente usando sugerencias de Copilot CX",
-        "Registrar la tipificación y el motivo de cierre obligatorio"
-      ]
-    }
-  },
-
-  // 6. SUPERVISOR CX - AVANZADO
-  supervisor_cx_avanzado: {
-    rol: "supervisor_cx",
-    dificultad: "avanzado",
-    teorico: [
-      {
-        id: "q1",
-        pregunta: "¿Dónde se gestionan y parametrizan los minutos de SLA (FRT y RT) para los niveles de urgencia en CX?",
-        opciones: [
-          "En la pestaña 'Tiempos de SLAs' del Panel de Configuración de CX (`CxConfigPanel`)",
-          "En las preferencias personales de Mi Perfil",
-          "En la plantilla de invitaciones de correo",
-          "Modificando el archivo local index.css"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q2",
-        pregunta: "¿Cómo distribuye el motor de ruteo Round-Robin los tickets en las colas de soporte?",
-        opciones: [
-          "Asigna rotativamente el ticket al agente activo en la cola correspondiente que lleve más tiempo sin recibir un caso",
-          "Asigna todos los tickets entrantes al supervisor de guardia",
-          "Distribuye los casos al azar independientemente del país y la cola",
-          "Asigna los tickets al agente con mayor puntaje de gamificación"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q3",
-        pregunta: "¿Qué acción realiza el motor Sentinel Triage IA al ingresar un nuevo ticket de soporte?",
-        opciones: [
-          "Analiza el texto del reclamo, sugiere la tipificación, determina la urgencia (baja a crítica) y encola el ticket",
-          "Responde al cliente cancelando el despacho inmediatamente",
-          "Calcula la comisión de ventas del ejecutivo comercial",
-          "Cierra el ticket si no identifica palabras clave de riesgo"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q4",
-        pregunta: "¿Cómo se configuran los artículos de preguntas frecuentes que se exponen en el Help Center público?",
-        opciones: [
-          "En el módulo 'Base de FAQs' de CX, especificando categoría, título y contenido en Markdown",
-          "Subiendo archivos PDF a una carpeta de Google Drive",
-          "Escribiendo respuestas directamente en la base de datos de usuarios",
-          "No se pueden personalizar, son fijos por sistema"
-        ],
-        correcta: 0
-      },
-      {
-        id: "q5",
-        pregunta: "Si se detecta un reclamo que menciona acciones legales o disconformidad crítica, ¿cómo actúa Sentinel Triage?",
-        opciones: [
-          "Clasifica automáticamente el ticket con urgencia 'Crítica' y notifica a las colas prioritarias de supervisión",
-          "Borra el ticket para evitar registros negativos en las métricas",
-          "Envía una oferta de reembolso automático sin revisión",
-          "Pausa el servidor de base de datos"
-        ],
-        correcta: 0
-      }
-    ],
-    practico: {
-      id: "p1",
-      pregunta: "Durante un evento de alta demanda (CyberDay) en Chile, el volumen de tickets supera la capacidad de respuesta y varios tickets VIP están por vencer sus SLAs. Diseña un plan de contingencia detallado para reajustar colas de ruteo, reasignar tickets en bloque y aplicar macros de respuesta rápida sin degradar la calidad.",
-      criteriosEvaluacion: [
-        "Ajustar la distribución de colas de ruteo y prioridades por país",
-        "Ejecutar reasignaciones masivas de tickets hacia agentes disponibles",
-        "Utilizar macros y respuestas rápidas estandarizadas para agilizar la primera respuesta (FRT)",
-        "Monitorear los indicadores de cumplimiento de SLAs en tiempo real"
-      ]
-    }
-  },
-
-  // 7. ADMINISTRADOR - BÁSICO Y AVANZADO
+  // 5. ADMINISTRADOR - BÁSICO Y AVANZADO
   admin_basico: {
     rol: "admin",
     dificultad: "basico",
@@ -1014,9 +813,9 @@ const examsCatalog = {
     teorico: [
       {
         id: "q1",
-        pregunta: "¿Cómo se gestionan la calibración y el versionado de los System Prompts Máster de los agentes Sentinel IA?",
+        pregunta: "¿Cómo se gestionan la calibración y el versionado de los System Prompts Máster de los agentes Luxia IA?",
         opciones: [
-          "En `SentinelConfigPanel`, editando el prompt máster y permitiendo la reversión de versiones desde la subcolección `versions`",
+          "En `LuxiaIaConfigPanel`, editando el prompt máster y permitiendo la reversión de versiones desde la subcolección `versions`",
           "Desplegando una nueva versión de código mediante Git y Cloud Functions",
           "Modificando las constantes en el archivo local constants.js",
           "Enviando una solicitud de cambio a la API de Google Gemini"
@@ -1070,9 +869,9 @@ const examsCatalog = {
     ],
     practico: {
       id: "p1",
-      pregunta: "Un cambio reciente en el System Prompt de Sentinel Lead Scorer está provocando que el 90% de los leads sean clasificados como 'Red' (falsos negativos). Explica el procedimiento técnico de auditoría, cómo consultar la subcolección `versions` para hacer un rollback de la versión previa del prompt y cómo probar la calibración en caliente.",
+      pregunta: "Un cambio reciente en el System Prompt de Luxia Lead Scorer está provocando que el 90% de los leads sean clasificados como 'Red' (falsos negativos). Explica el procedimiento técnico de auditoría, cómo consultar la subcolección `versions` para hacer un rollback de la versión previa del prompt y cómo probar la calibración en caliente.",
       criteriosEvaluacion: [
-        "Ingresar a SentinelConfigPanel y acceder al Historial de Versiones del agente afectado",
+        "Ingresar a LuxiaIaConfigPanel y acceder al Historial de Versiones del agente afectado",
         "Seleccionar la versión anterior estable y ejecutar la reversión (rollback)",
         "Probar la calibración evaluando un lead de prueba y verificando el log en IaConsumptionPanel"
       ]

@@ -6,7 +6,7 @@ function getAiClient() {
   if (!aiInstance) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.warn("[SENTINEL IA] Advertencia: GEMINI_API_KEY no está configurada en las variables de entorno.");
+      console.warn("[LUXIA IA] Advertencia: GEMINI_API_KEY no está configurada en las variables de entorno.");
       return null;
     }
     aiInstance = new GoogleGenAI({ apiKey });
@@ -17,13 +17,13 @@ function getAiClient() {
 /**
  * Orquestador Core para todas las llamadas a Gemini en CRM-Luxia con Supabase
  * @param {object} params
- * @param {string} params.agenteId - Identificador del agente (ej. 'sentinel', 'sentinel_lead_scorer')
+ * @param {string} params.agenteId - Identificador del agente (ej. 'luxia', 'luxia_lead_scorer')
  * @param {string} params.prompt - Entrada a procesar
  * @param {string} [params.userEmail] - Email del usuario solicitante
  * @param {object} [params.contextInfo] - Metadatos de contexto (clienteId, etc.)
  * @param {object} params.supabase - Cliente Supabase Admin
  */
-async function generateSentinelContent({ agenteId, prompt, userEmail = "System (Auto)", contextInfo = {}, supabase }) {
+async function generateLuxiaContent({ agenteId, prompt, userEmail = "System (Auto)", contextInfo = {}, supabase }) {
   try {
     // 1. Obtener la configuración del agente desde PostgreSQL
     const { data: agentConfig, error: configError } = await supabase
@@ -33,11 +33,11 @@ async function generateSentinelContent({ agenteId, prompt, userEmail = "System (
       .single();
 
     if (configError || !agentConfig) {
-      console.warn(`[SENTINEL IA] No se encontró configuración para el agente ${agenteId}. Usando valores por defecto.`);
+      console.warn(`[LUXIA IA] No se encontró configuración para el agente ${agenteId}. Usando valores por defecto.`);
     }
 
     if (agentConfig && agentConfig.disabled === true) {
-      console.warn(`[SENTINEL IA] Agente ${agenteId} desactivado globalmente.`);
+      console.warn(`[LUXIA IA] Agente ${agenteId} desactivado globalmente.`);
       return {
         success: false,
         error: `Agente IA Deshabilitado (${agenteId})`
@@ -52,7 +52,7 @@ async function generateSentinelContent({ agenteId, prompt, userEmail = "System (
       };
     }
 
-    const systemPrompt = agentConfig?.system_prompt || "Eres Sentinel IA, el auditor inteligente de Luxia.";
+    const systemPrompt = agentConfig?.system_prompt || "Eres Luxia IA, el auditor inteligente de Luxia.";
     const modelName = agentConfig?.model_name || 'gemini-3.5-flash';
     const temperature = agentConfig?.temperature ? parseFloat(agentConfig.temperature) : 0.2;
     const maxTokens = agentConfig?.max_output_tokens ? parseInt(agentConfig.max_output_tokens) : 1000;
@@ -107,7 +107,7 @@ async function generateSentinelContent({ agenteId, prompt, userEmail = "System (
       tokens: totalTokens
     };
   } catch (err) {
-    console.error(`[SENTINEL IA] Error ejecutando agente ${agenteId}:`, err);
+    console.error(`[LUXIA IA] Error ejecutando agente ${agenteId}:`, err);
     return {
       success: false,
       error: err.message
@@ -116,6 +116,6 @@ async function generateSentinelContent({ agenteId, prompt, userEmail = "System (
 }
 
 module.exports = {
-  generateSentinelContent,
+  generateLuxiaContent,
   getAiClient
 };

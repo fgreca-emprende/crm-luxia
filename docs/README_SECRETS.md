@@ -15,7 +15,7 @@ Estas variables se compilan e incrustan en el bundle del cliente. **Nunca deben 
 ### B. Secretos Críticos del Backend Worker (`server/`)
 Estas variables otorgan control administrativo total y **residen exclusivamente en el servidor**:
 *   `SUPABASE_SERVICE_ROLE_KEY`: Clave administrativa de Supabase que bypasséa RLS para tareas de mantenimiento y cron jobs.
-*   `GEMINI_API_KEY`: Clave de acceso a la API de Google Gemini para las funciones de Sentinel IA.
+*   `GEMINI_API_KEY`: Clave de acceso a la API de Google Gemini para las funciones de Luxia IA.
 *   `DATABASE_URL`: Cadena de conexión directa a PostgreSQL (puerto 5432).
 *   `WHATSAPP_API_TOKEN` & `SLACK_BOT_TOKEN`: Credenciales para integraciones con canales de comunicación.
 

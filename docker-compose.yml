@@ -170,7 +170,7 @@ services:
       - crm-network
 
   # ============================================================================
-  # 8. CRM BACKEND SERVICE & WORKER (Node.js - Sentinel IA, Triggers & Crons)
+  # 8. CRM BACKEND SERVICE & WORKER (Node.js - Luxia IA, Triggers & Crons)
   # ============================================================================
   crm-backend:
     build:

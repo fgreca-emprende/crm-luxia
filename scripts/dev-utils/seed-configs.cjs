@@ -20,19 +20,15 @@ async function run() {
     disparar_ia: ['agente', 'supervisor', 'admin', 'superadmin'],
     eliminar_contrato: ['superadmin'],
     configurar_logout: ['superadmin'],
-    configurar_sentinel: ['superadmin'],
+    configurar_luxia: ['superadmin'],
     configurar_modelos_ia: ['superadmin'],
     configurar_presupuesto_whatsapp: ['superadmin'],
-    rendir_examen: ['lector', 'agente', 'supervisor', 'admin', 'superadmin', 'agente_cx', 'supervisor_cx'],
+    rendir_examen: ['lector', 'agente', 'supervisor', 'admin', 'superadmin'],
     forzar_sincronizacion_infra: ['superadmin'],
     calificar_lead: ['agente', 'supervisor', 'admin', 'superadmin'],
     asignar_lead_manual: ['supervisor', 'admin', 'superadmin'],
     agendar_meet: ['agente', 'supervisor', 'admin', 'superadmin'],
     crear_formulario_web: ['admin', 'superadmin'],
-    administrar_macros: ['supervisor_cx', 'admin', 'superadmin'],
-    administrar_helpcenter: ['supervisor_cx', 'admin', 'superadmin'],
-    administrar_automatizaciones: ['supervisor_cx', 'admin', 'superadmin'],
-    configurar_sla_cx: ['supervisor_cx', 'admin', 'superadmin'],
     referencia_tecnica: ['superadmin', 'admin'],
     configuracion_pipeline: ['superadmin', 'admin'],
     configuracion_onboarding: ['superadmin', 'admin'],
@@ -42,26 +38,17 @@ async function run() {
     configuracion_equipos: ['superadmin', 'admin'],
     configuracion_capacitacion: ['superadmin', 'admin'],
     configuracion_metrics_studio: ['superadmin', 'admin'],
-    configuracion_integraciones: ['superadmin', 'admin'],
-    configuracion_cx_sla: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_routing: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_tipificaciones: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_macros: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_helpcenter: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_automatizaciones: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_csat: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_motivos: ['superadmin', 'admin', 'supervisor_cx']
+    configuracion_integraciones: ['superadmin', 'admin']
   };
 
   const defaultScopes = {
-    leads: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', agente_cx: 'NONE', supervisor_cx: 'NONE', editor: 'ALL' },
-    oportunidades: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', agente_cx: 'NONE', supervisor_cx: 'NONE', editor: 'ALL' },
-    clientes: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', agente_cx: 'ALL', supervisor_cx: 'ALL', editor: 'ALL' },
-    tablero: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', agente_cx: 'ALL', supervisor_cx: 'ALL', editor: 'OWN' },
-    cx_inbox: { superadmin: 'ALL', admin: 'ALL', supervisor: 'ALL', agente: 'ALL', lector: 'ALL', agente_cx: 'ALL', supervisor_cx: 'ALL', editor: 'NONE' },
-    alertas: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', agente_cx: 'ALL', supervisor_cx: 'ALL', editor: 'ALL' },
-    capacitacion: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', agente_cx: 'OWN', supervisor_cx: 'TEAM', editor: 'OWN' },
-    consumo_ia: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', agente_cx: 'OWN', supervisor_cx: 'TEAM', editor: 'NONE' }
+    leads: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'ALL' },
+    oportunidades: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'ALL' },
+    clientes: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'ALL' },
+    tablero: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'OWN' },
+    alertas: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'ALL' },
+    capacitacion: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'OWN' },
+    consumo_ia: { superadmin: 'ALL', admin: 'ALL', supervisor: 'TEAM', agente: 'OWN', lector: 'ALL', editor: 'NONE' }
   };
 
   const sql = `

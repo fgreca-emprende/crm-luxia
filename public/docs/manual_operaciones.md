@@ -15,7 +15,7 @@ El CRM-Luxia es una plataforma regional multipaís diseñada para centralizar la
     *   *Vista de País Individual:* Muestra las cifras financieras en la **Moneda Local** correspondiente (ARS, CLP, COP, PEN, MXN) y, de manera complementaria, el valor equivalente en **USD**.
 *   **Tasas de Cambio Congeladas (Frozen Exchange Rates):** El sistema congela la tasa de cambio vigente en el instante de creación o edición de cada oportunidad o contrato. Esto evita la alteración retroactiva de datos históricos por fluctuaciones cambiarias.
 *   **Buscadores de Tablas e Iniciales (Search Tokens):** Filtros rápidos de búsqueda integrados en cada vista de listados (Clientes, Leads, Oportunidades) que permiten encontrar registros rápidamente ingresando sus iniciales o palabras clave indexadas (ej. "W PE" para encontrar "Walmart Perú").
-*   **Copiloto Conversacional de Cuenta (Sentinel IA):** Chat de IA interactivo accesible de forma local dentro de la ficha de detalle de cada cliente, lead u oportunidad, especializado en analizar bitácoras, correos, contratos y notas específicas de esa entidad.
+*   **Copiloto Conversacional de Cuenta (Luxia IA):** Chat de IA interactivo accesible de forma local dentro de la ficha de detalle de cada cliente, lead u oportunidad, especializado en analizar bitácoras, correos, contratos y notas específicas de esa entidad.
 *   **Widgets Flotantes Personalizables:** Los botones de "Ayuda y Documentación" e "IA de Soporte" son flotantes e interactivos. El usuario puede arrastrarlos por la pantalla, minimizarlos o cerrarlos. Se pueden restaurar desde la sección "Mi Perfil > Preferencias de Interfaz".
 
 ### Guías Paso a Paso
@@ -78,7 +78,7 @@ Módulo de admisión y calificación inicial de potenciales clientes corporativo
     *   *Páginas de Aterrizaje (Web-to-Lead):* Formularios públicos embebibles que insertan datos directamente en el CRM.
 *   **Ruteo Territorial Round-Robin:** Al registrarse un lead sin un Account Manager (AM) asignado, el backend ejecuta un algoritmo de distribución rotativa entre los comerciales del país del lead.
     *   *Priorización por Certificación:* El algoritmo Round-Robin asigna el lead con prioridad a los comerciales que tengan el badge de capacitación activa (`🎓 Certificado`).
-*   **Sentinel Lead Scorer (Calificación IA):** Sentinel procesa los datos del lead contra el perfil de cliente ideal (ICP) del país seleccionado y retorna:
+*   **Luxia Lead Scorer (Calificación IA):** Luxia procesa los datos del lead contra el perfil de cliente ideal (ICP) del país seleccionado y retorna:
     *   *Score Numérico:* Calificación entre 0 y 100 puntos.
     *   *Prioridad Cromática:* Green (viabilidad excelente), Yellow (viabilidad moderada), Red (descalificado).
     *   *Análisis IA:* Explicación concisa del encaje comercial y 2 o 3 recomendaciones de próximos pasos para el ejecutivo.
@@ -95,7 +95,7 @@ Módulo de admisión y calificación inicial de potenciales clientes corporativo
 4. Si requieres asignación inmediata, selecciona un ejecutivo del listado. De lo contrario, déjalo vacío para que el motor ejecute el Round-Robin.
 5. Haz clic en **Guardar Lead**.
 
-#### Cómo evaluar un prospecto con Sentinel Scorer:
+#### Cómo evaluar un prospecto con Luxia Scorer:
 1. Selecciona la tarjeta del lead deseado de la grilla de prospección.
 2. Haz clic en el botón de **✨ Calificar Lead con IA**.
 3. Revisa la prioridad (Green/Yellow/Red), el desglose del puntaje y los próximos pasos en la sección de análisis que aparecerá en la ficha.
@@ -200,9 +200,9 @@ Expediente unificado de la cuenta del cliente que concentra los datos de contrat
 Módulo de prevención proactiva de pérdida de cuentas (Churn) y alertas automatizadas.
 
 ### Funcionalidades Clave y Lógica Interna
-*   **Sentinel Health Score IA:** Sistema que analiza notas de la bitácora, incidencias abiertas en CX y demoras logísticas para computar un puntaje de salud de cuenta entre 0 y 100 puntos. Muestra una curva histórica con justificación descriptiva emitida por Sentinel IA para cada punto de control.
+*   **Luxia Health Score IA:** Sistema que analiza notas de la bitácora, incidencias abiertas en CX y demoras logísticas para computar un puntaje de salud de cuenta entre 0 y 100 puntos. Muestra una curva histórica con justificación descriptiva emitida por Luxia IA para cada punto de control.
 *   **Timeline de Bitácora:** Registro histórico inmutable. Almacena de forma cronológica eventos del sistema (transición de Kanban, carga de contratos) y notas manuales redactadas por los Account Managers.
-*   **Canal "Alertas de Riesgo":** Muro de notificaciones que expone alertas críticas generadas por Sentinel IA.
+*   **Canal "Alertas de Riesgo":** Muro de notificaciones que expone alertas críticas generadas por Luxia IA.
     *   *Diagnóstico Completo:* Expone la causa raíz identificada por IA y la sugerencia de plan de acción inmediato.
     *   *Resolución Protegida por Cooldown:* El ejecutivo debe redactar obligatoriamente una nota de auditoría explicando qué medidas comerciales se tomaron antes de marcar la alerta como resuelta. Una vez resuelta, esa alerta entra en un enfriamiento de 24 horas para evitar resoluciones accidentales repetidas.
 *   **Aislamiento Comercial de Supervisores:** Los supervisores restringidos solo visualizan los leads, clientes y alertas de los Account Managers pertenecientes a su división (Adquisición o Retención).
@@ -212,7 +212,7 @@ Módulo de prevención proactiva de pérdida de cuentas (Churn) y alertas automa
 #### Cómo justificar la salud de una cuenta y ver su timeline:
 1. Ingresa a la ficha de un cliente específico.
 2. Observa la sección superior de **Health Score**. Haz clic en **Ver Línea de Tiempo de Salud**.
-3. Selecciona un punto de control en el gráfico interactivo para ver la justificación en Markdown que emitió Sentinel IA en esa fecha.
+3. Selecciona un punto de control en el gráfico interactivo para ver la justificación en Markdown que emitió Luxia IA en esa fecha.
 
 #### Cómo resolver una Alerta de Riesgo con auditoría:
 1. Dirígete a **Alertas de Riesgo** en el menú de navegación.
@@ -231,7 +231,7 @@ Centro integrado de comunicación omnicanal con leads y clientes corporativos.
     *   *Ventana de 24 horas de Meta:* Si se ha recibido un mensaje del cliente en las últimas 24 horas, se habilita el teclado para redactar texto libre.
     *   *Plantillas Meta:* Si la ventana de 24 horas está cerrada, el ejecutivo solo puede seleccionar y enviar una plantilla pre-aprobada por Meta.
     *   *Notas Internas (Susurros):* Permite redactar anotaciones internas privadas en el timeline de la conversación. Estas notas son invisibles para el cliente pero visibles por todo el equipo de Luxia.
-    *   *Sugerencias IA del Copiloto Sentinel:* Analiza los últimos mensajes de la conversación de WhatsApp y genera sugerencias de respuesta adaptativas en un clic.
+    *   *Sugerencias IA del Copiloto Luxia:* Analiza los últimos mensajes de la conversación de WhatsApp y genera sugerencias de respuesta adaptativas en un clic.
 *   **Copiloto de Terreno & Asistente de Voz:**
     *   *Dictado por Voz:* Permite dictar notas de bitácora mediante reconocimiento de voz integrado en el navegador (Web Speech API).
     *   *Action Mode:* Ejecuta cambios de etapa de oportunidades o hitos del onboarding mediante comandos de voz (ej: *"Completar hito firma contrato"*).
@@ -245,7 +245,7 @@ Centro integrado de comunicación omnicanal con leads y clientes corporativos.
 
 #### Cómo enviar mensajes y utilizar macros en WhatsApp:
 1. Abre la pestaña **WhatsApp** en la ficha del cliente.
-2. Si la conversación está abierta (dentro de las 24 horas), escribe tu mensaje en la caja inferior. Puedes hacer clic en **✨ Copiloto WhatsApp** para que Sentinel redacte una sugerencia.
+2. Si la conversación está abierta (dentro de las 24 horas), escribe tu mensaje en la caja inferior. Puedes hacer clic en **✨ Copiloto WhatsApp** para que Luxia redacte una sugerencia.
 3. Si la ventana está cerrada, selecciona **Enviar Plantilla**, elige la plantilla adecuada, completa los valores variables y haz clic en **Enviar**.
 4. Si quieres guardar un apunte interno para el equipo, activa el check **Guardar como Susurro (Nota Interna)** antes de enviar.
 
@@ -266,7 +266,7 @@ Bandeja compartida para la resolución y escalamiento de reclamos operacionales.
     *   *Frentes de Atención:* Segmentación de colas por origen: VIP (clientes corporativos prioritarios), Final (destinatarios de envíos), Drivers (conductores de la flota regional).
 *   **Gestión de Respuestas y Notas Internas (Susurros):** Permite intercalar entre respuestas públicas (enviadas por correo/WhatsApp al creador del ticket) y susurros internos para auditorías y coordinación técnica.
 *   **SLA de Atención y Alarmas:** Relojes de control dinámicos que muestran el tiempo límite de primera respuesta (FRT) y tiempo de resolución (RT). Cambian a color rojo al estar próximos a vencer.
-*   **Sugerencias del Copiloto Sentinel CX:** Lee la tipificación asignada al ticket y el historial de mensajes para sugerir un texto formal de resolución o disculpa.
+*   **Sugerencias del Copiloto Luxia CX:** Lee la tipificación asignada al ticket y el historial de mensajes para sugerir un texto formal de resolución o disculpa.
 
 ### Guías Paso a Paso
 
@@ -288,7 +288,7 @@ Entrenamiento interactivo obligatorio para la certificación y ruteo prioritario
 *   **Prioridad en Ruteo Round-Robin:** Los comerciales certificados con el distintivo de birrete (`🎓`) reciben prioridad de asignación de leads en el algoritmo rotativo regional.
 *   **Examen Bimodal:**
     *   *Teórico:* Selección múltiple. Se procesa en servidor con protección contra copias y saltos de pestaña (anti-cheat).
-    *   *Práctico:* Caso operativo real de negociación o configuración. El texto es evaluado mediante el motor *Sentinel Exam Engine*, que analiza la estructura, consistencia y viabilidad, emitiendo una nota de 0 a 100 y una retroalimentación detallada en Markdown.
+    *   *Práctico:* Caso operativo real de negociación o configuración. El texto es evaluado mediante el motor *Luxia Exam Engine*, que analiza la estructura, consistencia y viabilidad, emitiendo una nota de 0 a 100 y una retroalimentación detallada en Markdown.
 *   **Gamificación Activa:** La aprobación del examen de certificación otorga XP, actualiza el nivel del usuario en el Leaderboard regional y le añade la distinción de birrete (`🎓`) al lado de su nombre.
 
 ### Guías Paso a Paso
@@ -402,7 +402,7 @@ Gestión de usuarios del CRM, invitaciones y equipos.
 ### Funcionalidades Clave y Lógica Interna
 *   **Gestión de Invitaciones por Correo (SMTP Queue):**
     *   *Plantilla de Invitación:* Permite configurar el asunto y cuerpo de la invitación por correo. Soporta las variables dinámicas `{{email}}`, `{{rol}}` y `{{equipo}}`.
-    *   *Cola de Correos (`cola_correos`):* Panel de observabilidad técnica que muestra los correos pendientes de envío, en proceso, enviados o fallidos, con detalle de fecha, hora y logs de error SMTP en tiempo real.
+    *   *Cola de Correos (`cola_correos`):* Panel de observabilidad técnica que muestra los correos pendientes de envío, en proceso, enviados o fallidos, con detalle de fecha, hora y logs de error SMTP en real.
 *   **Estructura de Equipos:** Definición de divisiones de trabajo (Adquisición, Retención, CX) con un interruptor (`participaGamificacion`) que determina si el equipo compite en el Leaderboard por XP.
 *   **Regla de Gobernanza de Equipos para Administradores:** Por arquitectura de seguridad y permisos globales, los usuarios con rol **Admin** o **SuperAdmin** pertenecen de manera obligatoria y exclusiva al equipo **Global**. Al invitar o modificar el rol de un usuario a Admin o SuperAdmin, el sistema fija automáticamente su equipo en *Global* e inhabilita su reasignación a equipos específicos en la consola de usuarios.
 
@@ -427,7 +427,7 @@ Constructor no-code de formularios dinámicos, Metrics Studio e Inbound Leads.
     *   *Catálogos de Origen:* Los campos de selección pueden nutrirse de opciones manuales o enlazar dinámicamente con catálogos vivos del sistema (ej: lista de servicios contratados, lista de AMs activos).
     *   *Live Preview:* Panel lateral que renderiza en tiempo real el formulario final mientras se agregan o modifican campos.
 *   **Metrics Studio (IA KPI Engine):**
-    *   *Generador en Lenguaje Natural:* Permite ingresar una consulta simple (ej: *"Contratos activos con renovación automática en Perú"*) para que Sentinel Architect procese el prompt, determine la colección destino y genere las métricas.
+    *   *Generador en Lenguaje Natural:* Permite ingresar una consulta simple (ej: *"Contratos activos con renovación automática en Perú"*) para que Luxia Architect procese el prompt, determine la colección destino y genere las métricas.
     *   *Loop de Feedback:* Los ejecutivos pueden calificar el gráfico generado con 👍 o 👎 para entrenar y refinar las respuestas del motor conversacional.
 *   **Diseñador de Formularios Web Inbound:**
     *   *Campos Disponibles vs Seleccionados:* Panel con drag-and-drop para mover campos y estructurar formularios web públicos.
@@ -483,10 +483,8 @@ Administración avanzada de privilegios de seguridad y políticas de sesión.
 ---
 
 ## 18. Configuración de IA y FinOps (Presupuesto) [roles: superadmin]
-Monitoreo financiero y gobernanza de la inteligencia artificial de Sentinel.
-
 ### Funcionalidades Clave y Lógica Interna
-*   **Sentinel Máster Prompts Config:** Permite editar los System Prompts, temperatura del modelo y número de tokens de salida de los distintos agentes IA integrados en el CRM (scorer, risk, triage, metings, etc.) incluyendo el nuevo **🤖 Auditor KB** para propuestas de manuales. Permite revertir cambios mediante el historial de versiones guardadas.
+*   **Luxia Máster Prompts Config:** Permite editar los System Prompts, temperatura del modelo y número de tokens de salida de los distintos agentes IA integrados en el CRM (scorer, risk, triage, metings, etc.) incluyendo el nuevo **🤖 Auditor KB** para propuestas de manuales. Permite revertir cambios mediante el historial de versiones guardadas.
 *   **Gestión RAG y Propuestas de Conocimiento:**
     *   *Bandeja de Propuestas:* Ubicada en la pestaña **📝 Propuestas KB**. Recopila las sugerencias del Auditor de IA basadas en los reportes de feedbacks negativos corregidos por los usuarios para su aprobación o edición por parte del Administrador.
     *   *Botón Actualizar RAG (Validación Inteligente):* Re-indexa de forma vectorial los manuales de operaciones y referencia técnica. Cuenta con un validador de firmas SHA-256 en base de datos. Si no se han realizado cambios en los manuales de texto, el sistema aborta de inmediato la sincronización indicando que la base RAG está al día, evitando costes de APIs de Gemini y escrituras Firestore redundantes.
@@ -500,8 +498,8 @@ Monitoreo financiero y gobernanza de la inteligencia artificial de Sentinel.
 ### Guías Paso a Paso
 
 #### Cómo configurar y revertir un Prompt Máster de IA:
-1. Ve a **Configuración > Inteligencia & FinOps > Parámetros Sentinel**.
-2. Selecciona la pestaña del agente a modificar (ej: *Sentinel Lead Scorer* o *🤖 Auditor KB*).
+1. Ve a **Configuración > Inteligencia & FinOps > Parámetros Luxia**.
+2. Selecciona la pestaña del agente a modificar (ej: *Luxia Lead Scorer* o *🤖 Auditor KB*).
 3. Edita la caja de texto del **System Prompt**.
 4. Haz clic en **Guardar y Publicar**.
 5. Si deseas revertir a un estado previo, haz clic en **Historial de Versiones**, selecciona una fecha y presiona **Revertir Versión**.

@@ -20,8 +20,7 @@ async function run() {
     { id: 'Global', nombre: 'Global / Dirección', lider: 'admin@luxia.com', descripcion: 'Equipo transversal y directivo.' },
     { id: 'Adquisicion', nombre: 'Ventas - Adquisición (Hunting)', lider: '', descripcion: 'Equipo comercial orientado a prospección y nuevos clientes.' },
     { id: 'Retencion', nombre: 'Ventas - Retención & Expansión (Farming)', lider: '', descripcion: 'Equipo comercial orientado a cross-sell, up-sell y renovaciones.' },
-    { id: 'CX', nombre: 'Customer Experience & Soporte', lider: '', descripcion: 'Equipo de atención a clientes, ticketing e incidencias operativas.' },
-    { id: 'Operaciones', nombre: 'Operaciones & Logística', lider: '', descripcion: 'Control de tráfico, despacho y logística nacional.' }
+    { id: 'Operaciones', nombre: 'Operaciones & Asistencia Agronómica', lider: '', descripcion: 'Control operativo de entregas, depósitos y coordinación agronómica.' }
   ];
 
   const sql = `

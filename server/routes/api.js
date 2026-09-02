@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { generateSentinelContent } = require('../services/sentinelCore');
+const { generateLuxiaContent } = require('../services/luxiaCore');
 
 /**
  * Middleware para validar API Keys en llamadas a /api/v1/
@@ -73,27 +73,39 @@ const { sanitizeUserInput, sanitizeContext } = require('../utils/sanitize');
 
     if (insertErr) throw insertErr;
 
-    // 2. Ejecutar calificación en segundo plano con Sentinel Lead Scorer
+    // 2. Ejecutar calificación en segundo plano con Luxia Lead Scorer de forma segura
     const prompt = `Analiza este nuevo lead inbound para Luxia:
 Empresa: ${safeEmpresa}
 Contacto: ${safeContacto} (${emailClean})
 País: ${safePais}
 Datos adicionales: ${JSON.stringify(safeContext)}`;
 
-    generateSentinelContent({
-      agenteId: 'sentinel_lead_scorer',
-      prompt,
-      userEmail: 'Web Inbound Form',
-      contextInfo: { leadId: lead.id },
-      supabase
-    }).then(async (aiRes) => {
-      if (aiRes.success && aiRes.data) {
-        await supabase.from('leads').update({
-          score_calculado: aiRes.data.score || 70,
-          calificacion_ia: aiRes.data
-        }).eq('id', lead.id);
+    setImmediate(async () => {
+      try {
+        const aiRes = await generateLuxiaContent({
+          agenteId: 'luxia_lead_scorer',
+          prompt,
+          userEmail: 'Web Inbound Form',
+          contextInfo: { leadId: lead.id },
+          supabase
+        });
+
+        if (aiRes && aiRes.success && aiRes.data) {
+          const { error: updateErr } = await supabase.from('leads').update({
+            score_calculado: aiRes.data.score || 70,
+            calificacion_ia: aiRes.data
+          }).eq('id', lead.id);
+
+          if (updateErr) {
+            console.error(`[Web-to-Lead IA Error] Error actualizando lead ${lead.id}:`, updateErr);
+          }
+        } else if (aiRes && !aiRes.success) {
+          console.warn(`[Web-to-Lead IA Warn] Luxia IA falló para lead ${lead.id}: ${aiRes.error}`);
+        }
+      } catch (bgErr) {
+        console.error(`[Web-to-Lead IA Critical Error] Excepción no controlada en scoring background para lead ${lead.id}:`, bgErr);
       }
-    }).catch(err => console.error('[Web-to-Lead IA Error]', err));
+    });
 
     return res.status(201).json({
       success: true,

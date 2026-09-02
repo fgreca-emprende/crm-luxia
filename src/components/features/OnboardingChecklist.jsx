@@ -95,7 +95,7 @@ export function OnboardingChecklist({ clienteId }) {
             relevamiento_agronomico_lotes: 'Relevamiento Agronómico y Plan de Campaña',
             asesoramiento_tecnico_manejo: 'Asesoramiento Técnico y Calibración de Dosis',
             coordinacion_logistica_destino: 'Coordinación Logística y Depósito de Destino',
-            primer_despacho_entrega: 'Primer Despacho y Entrega en Establecimiento',
+            primera_entrega_suministro: 'Primer Despacho y Entrega en Establecimiento',
             monitoreo_campo_30_dias: 'Monitoreo a Campo y Evaluación de Eficacia (30 días)',
             // Fallbacks legacy
             firma_contrato: 'Acuerdo Comercial y Legajo Impositivo Aprobado',

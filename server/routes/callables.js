@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { generateSentinelContent } = require('../services/sentinelCore');
+const { generateLuxiaContent } = require('../services/luxiaCore');
 const { processUserAction } = require('../services/gamificationService');
 
 /**
@@ -61,7 +61,7 @@ router.post('/obtener-examen', requireAuth, async (req, res) => {
 });
 
 // ============================================================================
-// 2. EVALUAR EXAMEN (Calificación automática y Sentinel IA)
+// 2. EVALUAR EXAMEN (Calificación automática y Luxia IA)
 // ============================================================================
 router.post('/evaluar-examen', requireAuth, async (req, res) => {
   const { rol, dificultad, respuestasTeorico, respuestaPractico, usuarioNombre } = req.body;
@@ -90,7 +90,7 @@ router.post('/evaluar-examen', requireAuth, async (req, res) => {
 
   const scoreTeorico = totalPreguntas > 0 ? Math.round((aciertos / totalPreguntas) * 100) : 0;
 
-  // 2. Calificar Caso Práctico con Sentinel IA
+  // 2. Calificar Caso Práctico con Luxia IA
   let scorePractico = 80;
   let feedbackPractico = "Evaluación completada satisfactoriamente.";
 
@@ -106,8 +106,8 @@ Devuelve un JSON con:
   "feedback": (texto breve en markdown con fortalezas y oportunidades de mejora)
 }`;
 
-    const aiRes = await generateSentinelContent({
-      agenteId: 'sentinel_exam',
+    const aiRes = await generateLuxiaContent({
+      agenteId: 'luxia_exam',
       prompt: promptIA,
       userEmail: user.email,
       supabase
@@ -115,7 +115,7 @@ Devuelve un JSON con:
 
     if (aiRes.success && aiRes.data) {
       scorePractico = aiRes.data.scorePractico || 75;
-      feedbackPractico = aiRes.data.feedback || "Evaluado por Sentinel IA.";
+      feedbackPractico = aiRes.data.feedback || "Evaluado por Luxia IA.";
     }
   }
 
@@ -137,7 +137,7 @@ Devuelve un JSON con:
     feedback_practico: feedbackPractico,
     score_global: scoreGlobal,
     aprobado,
-    evaluado_por: 'sentinel_ia',
+    evaluado_por: 'luxia_ia',
     estado: 'evaluado',
     processed: true
   }).select().single();
@@ -172,7 +172,7 @@ Devuelve un JSON con:
 const { sanitizeUserInput, sanitizeContext } = require('../utils/sanitize');
 
 // ============================================================================
-// 3. COPILOTO SENTINEL (Comandos por voz y consultas inteligentes)
+// 3. COPILOTO LUXIA (Comandos por voz y consultas inteligentes)
 // ============================================================================
 router.post('/copilot', requireAuth, async (req, res) => {
   const { prompt, clienteId, contexto } = req.body;
@@ -193,8 +193,8 @@ router.post('/copilot', requireAuth, async (req, res) => {
 
   const promptFinal = `Contexto del cliente: ${JSON.stringify(safeContext)}\nComando/Consulta del operador: "${safePrompt}"`;
 
-  const aiRes = await generateSentinelContent({
-    agenteId: 'sentinel_copilot',
+  const aiRes = await generateLuxiaContent({
+    agenteId: 'luxia_copilot',
     prompt: promptFinal,
     userEmail: user.email,
     contextInfo: { clienteId },
@@ -222,8 +222,8 @@ router.post('/soporte-agent', requireAuth, async (req, res) => {
 
   const promptFinal = `El operador se encuentra en la pantalla "${safeSeccion}".\nPregunta: "${safePregunta}"\nExplica paso a paso cómo realizar la acción en el CRM.`;
 
-  const aiRes = await generateSentinelContent({
-    agenteId: 'sentinel_support',
+  const aiRes = await generateLuxiaContent({
+    agenteId: 'luxia_support',
     prompt: promptFinal,
     userEmail: user.email,
     supabase
@@ -240,7 +240,7 @@ router.post('/exportar-datos', requireAuth, async (req, res) => {
   const supabase = req.app.get('supabase');
   const user = req.user;
 
-  if (!['leads', 'clientes', 'oportunidades', 'tickets'].includes(entidad)) {
+  if (!['leads', 'clientes', 'oportunidades'].includes(entidad)) {
     return res.status(400).json({ error: 'Entidad no válida para exportación.' });
   }
 

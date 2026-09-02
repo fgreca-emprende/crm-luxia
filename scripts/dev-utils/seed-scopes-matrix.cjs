@@ -32,19 +32,11 @@ async function run() {
     configuracion_equipos: ['superadmin', 'admin'],
     configuracion_capacitacion: ['superadmin', 'admin'],
     configuracion_metrics_studio: ['superadmin', 'admin'],
-    configuracion_integraciones: ['superadmin', 'admin'],
-    configuracion_cx_sla: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_routing: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_tipificaciones: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_macros: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_helpcenter: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_automatizaciones: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_csat: ['superadmin', 'admin', 'supervisor_cx'],
-    configuracion_cx_motivos: ['superadmin', 'admin', 'supervisor_cx']
+    configuracion_integraciones: ['superadmin', 'admin']
   };
   
   const newActions = {
-    operar_onboarding_checklist: ['agente', 'supervisor', 'admin', 'superadmin', 'agente_cx', 'supervisor_cx']
+    operar_onboarding_checklist: ['agente', 'supervisor', 'admin', 'superadmin']
   };
 
   const defaultScopes = {
@@ -53,72 +45,49 @@ async function run() {
       admin: 'ALL',
       supervisor: 'TEAM',
       agente: 'OWN',
-      lector: 'ALL',
-      agente_cx: 'NONE',
-      supervisor_cx: 'NONE'
+      lector: 'ALL'
     },
     oportunidades: {
       superadmin: 'ALL',
       admin: 'ALL',
       supervisor: 'TEAM',
       agente: 'OWN',
-      lector: 'ALL',
-      agente_cx: 'NONE',
-      supervisor_cx: 'NONE'
+      lector: 'ALL'
     },
     clientes: {
       superadmin: 'ALL',
       admin: 'ALL',
       supervisor: 'TEAM',
       agente: 'OWN',
-      lector: 'ALL',
-      agente_cx: 'ALL',
-      supervisor_cx: 'ALL'
+      lector: 'ALL'
     },
     tablero: {
       superadmin: 'ALL',
       admin: 'ALL',
       supervisor: 'TEAM',
       agente: 'OWN',
-      lector: 'ALL',
-      agente_cx: 'ALL',
-      supervisor_cx: 'ALL'
-    },
-    cx_inbox: {
-      superadmin: 'ALL',
-      admin: 'ALL',
-      supervisor: 'ALL',
-      agente: 'ALL',
-      lector: 'ALL',
-      agente_cx: 'ALL',
-      supervisor_cx: 'ALL'
+      lector: 'ALL'
     },
     alertas: {
       superadmin: 'ALL',
       admin: 'ALL',
       supervisor: 'TEAM',
       agente: 'OWN',
-      lector: 'ALL',
-      agente_cx: 'ALL',
-      supervisor_cx: 'ALL'
+      lector: 'ALL'
     },
     capacitacion: {
       superadmin: 'ALL',
       admin: 'ALL',
       supervisor: 'TEAM',
       agente: 'OWN',
-      lector: 'ALL',
-      agente_cx: 'OWN',
-      supervisor_cx: 'TEAM'
+      lector: 'ALL'
     },
     consumo_ia: {
       superadmin: 'ALL',
       admin: 'ALL',
       supervisor: 'TEAM',
       agente: 'OWN',
-      lector: 'ALL',
-      agente_cx: 'OWN',
-      supervisor_cx: 'TEAM'
+      lector: 'ALL'
     }
   };
 

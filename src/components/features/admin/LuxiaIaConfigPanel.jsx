@@ -219,19 +219,19 @@ export function LuxiaIaConfigPanel({ currentUser }) {
   }, [loadIaConfig, activeTab]);
 
   const agentIdMap = {
-    luxia_ia: 'sentinel',
-    luxia_gmail: 'sentinel_gmail',
-    luxia_whatsapp: 'sentinel_whatsapp',
-    luxia_contracts: 'sentinel_contracts',
-    luxia_copilot: 'sentinel_copilot',
-    luxia_lead_scorer: 'sentinel_lead_scorer',
-    luxia_pipeline_health: 'sentinel_pipeline_health',
-    luxia_search: 'sentinel_search',
-    luxia_triage: 'sentinel_triage',
-    luxia_architect: 'sentinel_architect',
-    luxia_exam: 'sentinel_exam',
-    luxia_support: 'sentinel_support',
-    luxia_ia_auditor: 'sentinel_ia_auditor'
+    luxia_ia: 'luxia',
+    luxia_gmail: 'luxia_gmail',
+    luxia_whatsapp: 'luxia_whatsapp',
+    luxia_contracts: 'luxia_contracts',
+    luxia_copilot: 'luxia_copilot',
+    luxia_lead_scorer: 'luxia_lead_scorer',
+    luxia_pipeline_health: 'luxia_pipeline_health',
+    luxia_search: 'luxia_search',
+    luxia_triage: 'luxia_triage',
+    luxia_architect: 'luxia_architect',
+    luxia_exam: 'luxia_exam',
+    luxia_support: 'luxia_support',
+    luxia_ia_auditor: 'luxia_ia_auditor'
   };
 
   const handleSaveIa = async (e) => {
@@ -241,14 +241,14 @@ export function LuxiaIaConfigPanel({ currentUser }) {
       // 1. Guardar en config_general
       await setConfigGeneral('config_ia_' + activeTab, iaConfig);
 
-      // 2. Sincronizar en tabla config_ia de PostgreSQL para el Backend Worker Sentinel
+      // 2. Sincronizar en tabla config_ia de PostgreSQL para el Backend Worker Luxia
       const dbAgentId = agentIdMap[activeTab] || activeTab;
       if (dbAgentId && activeTab !== 'system_alerts') {
         await supabase.from('config_ia').upsert({
           id: dbAgentId,
           nombre: iaConfig.nombre || dbAgentId,
           system_prompt: iaConfig.systemPrompt || iaConfig.system_prompt || '',
-          model_name: iaConfig.modelName || iaConfig.model_name || 'gemini-2.5-flash',
+          model_name: iaConfig.modelName || iaConfig.model_name || 'gemini-3.5-flash',
           temperature: parseFloat(iaConfig.temperature || 0.2),
           max_output_tokens: parseInt(iaConfig.maxOutputTokens || 1000, 10),
           disabled: iaConfig.disabled === true,
@@ -263,7 +263,7 @@ export function LuxiaIaConfigPanel({ currentUser }) {
         temperature: iaConfig.temperature || null,
         maxOutputTokens: iaConfig.maxOutputTokens || null
       });
-      showAlert('Configuración guardada y sincronizada con Sentinel IA con éxito.', 'success');
+      showAlert('Configuración guardada y sincronizada con Luxia IA con éxito.', 'success');
       loadIaConfig(activeTab);
     } catch (err) {
       showAlert(`Error al guardar configuración: ${err.message}`, 'danger');

@@ -21,7 +21,7 @@ export function useOnboarding(clienteId, currentUser = null) {
         { id: 'relevamiento_agronomico_lotes', titulo: 'Relevamiento Agronómico y Plan de Campaña', completado: false, fechaCompletado: null },
         { id: 'asesoramiento_tecnico_manejo', titulo: 'Asesoramiento Técnico y Calibración de Dosis', completado: false, fechaCompletado: null },
         { id: 'coordinacion_logistica_destino', titulo: 'Coordinación Logística y Depósito de Destino', completado: false, fechaCompletado: null },
-        { id: 'primer_despacho_entrega', titulo: 'Primer Despacho y Entrega en Establecimiento', completado: false, fechaCompletado: null },
+        { id: 'primera_entrega_suministro', titulo: 'Primera Entrega de Suministro en Establecimiento', completado: false, fechaCompletado: null },
         { id: 'monitoreo_campo_30_dias', titulo: 'Monitoreo a Campo y Evaluación de Eficacia (30 días)', completado: false, fechaCompletado: null }
       ];
 

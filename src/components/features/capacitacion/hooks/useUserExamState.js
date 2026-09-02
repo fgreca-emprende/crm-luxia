@@ -179,7 +179,7 @@ export function useUserExamState(user) {
 
       let evalResult = null;
 
-      // 2. Invocar Backend Worker con Sentinel IA
+      // 2. Invocar Backend Worker con Luxia IA
       try {
         evalResult = await callBackendApi('/evaluar-examen', {
           rol: docRol,

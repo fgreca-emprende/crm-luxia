@@ -123,7 +123,7 @@ async function run() {
       feedback_practico TEXT,
       score_global NUMERIC,
       aprobado BOOLEAN DEFAULT FALSE,
-      evaluado_por TEXT DEFAULT 'sentinel_ia',
+      evaluado_por TEXT DEFAULT 'luxia_ia',
       estado TEXT DEFAULT 'aprobado',
       processed BOOLEAN DEFAULT TRUE
     );

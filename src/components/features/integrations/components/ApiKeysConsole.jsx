@@ -486,29 +486,29 @@ export function ApiKeysConsole() {
                 )}
               </div>
 
-              {/* Endpoint 7: POST /v1/despachos/notificacion */}
+              {/* Endpoint 7: POST /v1/entregas/notificacion */}
               <div className="border-bottom" style={{ borderColor: 'var(--apple-border)' }}>
                 <button
                   type="button"
                   className="w-100 text-start py-2.5 px-3 border-0 bg-transparent d-flex justify-content-between align-items-center cursor-pointer"
-                  onClick={() => toggleEndpoint('postDespacho')}
-                  style={{ background: expandedEndpoint === 'postDespacho' ? 'var(--apple-surface-elevated)' : 'transparent' }}
+                  onClick={() => toggleEndpoint('postEntrega')}
+                  style={{ background: expandedEndpoint === 'postEntrega' ? 'var(--apple-surface-elevated)' : 'transparent' }}
                 >
                   <div className="small font-monospace fw-bold" style={{ color: 'var(--apple-text-primary)' }}>
-                    <span className="badge bg-success me-2" style={{ fontSize: '0.65rem' }}>POST</span>/v1/despachos/notificacion
+                    <span className="badge bg-success me-2" style={{ fontSize: '0.65rem' }}>POST</span>/v1/entregas/notificacion
                   </div>
-                  <i className={`bi bi-chevron-${expandedEndpoint === 'postDespacho' ? 'up' : 'down'} text-muted`}></i>
+                  <i className={`bi bi-chevron-${expandedEndpoint === 'postEntrega' ? 'up' : 'down'} text-muted`}></i>
                 </button>
 
-                {expandedEndpoint === 'postDespacho' && (
+                {expandedEndpoint === 'postEntrega' && (
                   <div className="small text-muted p-3 border-top" style={{ fontSize: '0.78rem', background: 'var(--apple-surface-elevated)', borderColor: 'var(--apple-border)' }}>
-                    <p className="mb-2"><strong>[Logística & Depósitos]</strong> Notifica la salida de depósito o entrega de remito fitosanitario en campo o sucursal.</p>
+                    <p className="mb-2"><strong>[Suministro & Operaciones]</strong> Notifica la entrega de remito fitosanitario en campo o depósito.</p>
                     <strong>Cuerpo (JSON):</strong>
                     <pre className="bg-dark text-light p-2.5 rounded mt-1 font-monospace" style={{ fontSize: '0.72rem', overflowX: 'auto' }}>
 {`{
   "remitoNumero": "REM-0001-00045231",
   "clienteId": "CLI-88231",
-  "estadoEntrega": "entregado", // entregado, en_transito, despachado
+  "estadoEntrega": "entregado", // entregado, en_transito
   "fechaEntrega": "2026-09-01T14:30:00Z",
   "receptorNombre": "Capataz / Ing. Agrónomo de Campo"
 }`}

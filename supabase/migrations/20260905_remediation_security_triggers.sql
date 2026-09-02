@@ -42,9 +42,9 @@ BEGIN
   
   IF u_role IN ('superadmin', 'admin') THEN
     RETURN 'ALL';
-  ELSIF u_role IN ('supervisor', 'supervisor_cx') THEN
+  ELSIF u_role = 'supervisor' THEN
     RETURN 'TEAM';
-  ELSIF u_role IN ('agente', 'agente_cx', 'editor') THEN
+  ELSIF u_role IN ('agente', 'editor') THEN
     RETURN 'OWN';
   ELSIF u_role = 'lector' THEN
     RETURN 'ALL'; -- Lectores tienen acceso de solo lectura global
@@ -87,7 +87,7 @@ FOR INSERT WITH CHECK (
   auth.uid() IS NOT NULL
   AND (
     public.is_admin()
-    OR public.current_user_role() IN ('supervisor', 'agente', 'agente_cx', 'supervisor_cx', 'editor')
+    OR public.current_user_role() IN ('supervisor', 'agente', 'editor')
   )
 );
 

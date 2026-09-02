@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- CRM-LUXIA ENTERPRISE - SEED DATA INICIAL
--- Modelos de IA, Agentes Sentinel, Catálogo de Servicios y Configuraciones
+-- Modelos de IA, Agentes Luxia, Catálogo de Servicios y Configuraciones
 -- ==============================================================================
 
 -- 1. MODELOS DE IA FUNDACIONALES
@@ -14,10 +14,10 @@ ON CONFLICT (id) DO NOTHING;
 -- 2. SERVICIOS LOGÍSTICOS ESTÁNDAR
 INSERT INTO public.config_servicios (id, nombre, descripcion)
 VALUES
-  ('saas_core', 'SaaS Core TMS / WMS', 'Plataforma central de trazabilidad y gestión logística'),
-  ('distribucion_regional', 'Distribución Regional & Cross-Dock', 'Transporte y consolidación de carga en centros de distribución'),
-  ('ultima_milla_express', 'Última Milla Express (Same Day)', 'Despacho urgente puerta a puerta en áreas metropolitanas'),
-  ('fulfillment_3pl', 'Fulfillment & Almacenamiento 3PL', 'Recepción, guardado, picking, packing y despacho de inventario')
+  ('saas_core', 'Luxia Agro Core Platform', 'Plataforma central de gestión comercial agronómica y seguimiento de lotes'),
+  ('distribucion_regional', 'Distribución & Acopio Regional', 'Consolidación de insumos agropecuarios y logística de acopio'),
+  ('suministro_fitosanitarios', 'Suministro Fitosanitario & Semillas', 'Provisión de defensivos agrícolas, herbicidas y semillas fiscalizadas'),
+  ('asesoramiento_tecnico', 'Asesoramiento Técnico & Receta Agronómica', 'Servicio de prescripción agronómica y monitoreo de eficacia en lote')
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. SECCIONES Y CAMPOS DINÁMICOS POR DEFECTO
@@ -30,27 +30,27 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.config_campos (id, key, nombre, tipo, opciones, origen_datos, orden, seccion_id, obligatorio, entidad)
 VALUES
-  ('campo_erp', 'software_erp', 'Sistema ERP / WMS Principal', 'select', '["SAP", "Oracle", "Odoo", "VTEX", "Shopify", "Custom"]'::jsonb, 'manual', 1, 'tecnologia', false, 'cliente'),
-  ('campo_volumen', 'volumen_mensual_estimado', 'Volumen de Despachos Mensuales', 'number', '[]'::jsonb, 'manual', 2, 'info_general', false, 'cliente'),
+  ('campo_erp', 'software_erp', 'Sistema ERP / Gestión Agrícola Principal', 'select', '["SAP", "Oracle", "Albor", "Finnegans", "Custom"]'::jsonb, 'manual', 1, 'tecnologia', false, 'cliente'),
+  ('campo_volumen', 'volumen_mensual_estimado', 'Superficie Estimada (Hectáreas)', 'number', '[]'::jsonb, 'manual', 2, 'info_general', false, 'cliente'),
   ('campo_tipo_contribuyente', 'tipo_contribuyente', 'Tipo de Contribuyente Fiscal', 'select', '["Persona Jurídica", "Persona Natural con Negocio", "Extranjero"]'::jsonb, 'manual', 3, 'datos_fiscales', false, 'cliente')
 ON CONFLICT (id) DO NOTHING;
 
--- 4. LOS 13 AGENTES DE SENTINEL IA
+-- 4. LOS 13 AGENTES DE LUXIA IA
 INSERT INTO public.config_ia (id, nombre, system_prompt, model_name, temperature, max_output_tokens, disabled, buffer_window_minutes)
 VALUES
-  ('sentinel', 'Auditor de Salud de Cuenta (Health Score)', 'Rol: Eres Sentinel IA, el Auditor de Riesgo Inteligente y Revenue Assurance de Luxia. Tu misión es evaluar la salud financiera, operativa y comercial de nuestros clientes para prevenir Churn. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1000, false, 5),
-  ('sentinel_gmail', 'Analista de Correos Gmail', 'Rol: Eres Sentinel IA para Gmail. Analiza hilos de correos de clientes, detectando sentimiento, compromisos comerciales y riesgos de insatisfacción. Responde estrictamente con JSON.', 'gemini-3.5-flash-lite', 0.1, 1000, false, 5),
-  ('sentinel_whatsapp', 'Copiloto y Sugerencias de WhatsApp', 'Rol: Eres Sentinel IA para WhatsApp Business. Analiza mensajes entrantes y genera sugerencias de respuesta en tono profesional y empático. Responde estrictamente con JSON.', 'gemini-3.5-flash-lite', 0.3, 1000, false, 5),
-  ('sentinel_contracts', 'Auditor de Contratos y Riesgo Legal', 'Rol: Eres Sentinel IA Auditor Legal Senior. Analiza cláusulas de contratos, penalidades de SLA, condiciones de pago y volumen mínimo Take-or-Pay. Responde estrictamente con JSON.', 'gemini-3.6-flash', 0.1, 2048, false, 5),
-  ('sentinel_copilot', 'Copiloto de Voz y Dictados de Terreno', 'Rol: Eres Sentinel Copilot. Interpreta notas de voz y comandos en lenguaje natural para crear interacciones, leads o actualizar clientes. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1000, false, 5),
-  ('sentinel_search', 'Buscador Inteligente de Ficha de Cliente', 'Rol: Eres Sentinel Search Agent. Responde consultas estratégicas sobre la ficha del cliente cruzando bitácora, contratos y contactos. Responde estructuradamente en viñetas Markdown.', 'gemini-3.5-flash', 0.2, 1500, false, 5),
-  ('sentinel_triage', 'Triage y Criticidad de Bitácora', 'Rol: Eres Sentinel IA Triage. Evalúa el impacto comercial y urgencia de cada nota o reunión registrada en el sistema. Responde estrictamente con JSON.', 'gemini-3.5-flash-lite', 0.1, 800, false, 5),
-  ('sentinel_architect', 'Metrics Studio Architect', 'Rol: Eres Metrics Studio Architect. Traduce preguntas analíticas en configuraciones de consultas y gráficos Recharts. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.1, 1200, false, 5),
-  ('sentinel_exam', 'Evaluador de Capacitación Comercial', 'Rol: Eres Sentinel Exam Evaluator. Califica respuestas prácticas de casos de estudio y genera retroalimentación pedagógica en Markdown. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1500, false, 5),
-  ('sentinel_support', 'Soporte Conversacional (Manuales)', 'Rol: Eres Sentinel Support. Asiste a los usuarios paso a paso en el uso del CRM basado en los manuales de operaciones RAG. Responde amigablemente en Markdown.', 'gemini-3.5-flash-lite', 0.3, 1200, false, 5),
-  ('sentinel_lead_scorer', 'Calificador de Leads B2B (ICP Scorer)', 'Rol: Eres Sentinel Lead Scorer. Califica el encaje de un prospecto comercial con el perfil de cliente ideal (ICP) calculando score y prioridad. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1000, false, 5),
-  ('sentinel_pipeline_health', 'Auditor de Pipeline de Ventas', 'Rol: Eres Sentinel Pipeline Auditor. Evalúa estancamiento de oportunidades y probabilidad real de cierre según interacciones recientes. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1000, false, 5),
-  ('sentinel_ia_auditor', 'Auditor de Calidad y Base de Conocimiento', 'Rol: Eres Sentinel IA Auditor. Analiza el feedback negativo de los usuarios para proponer nuevos artículos de ayuda y manuales operativos. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1500, false, 5)
+  ('luxia', 'Auditor de Salud de Cuenta (Health Score)', 'Rol: Eres Luxia IA, el Auditor de Riesgo Inteligente y Revenue Assurance de Luxia. Tu misión es evaluar la salud financiera, operativa y comercial de nuestros clientes para prevenir Churn. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1000, false, 5),
+  ('luxia_gmail', 'Analista de Correos Gmail', 'Rol: Eres Luxia IA para Gmail. Analiza hilos de correos de clientes, detectando sentimiento, compromisos comerciales y riesgos de insatisfacción. Responde estrictamente con JSON.', 'gemini-3.5-flash-lite', 0.1, 1000, false, 5),
+  ('luxia_whatsapp', 'Copiloto y Sugerencias de WhatsApp', 'Rol: Eres Luxia IA para WhatsApp Business. Analiza mensajes entrantes y genera sugerencias de respuesta en tono profesional y empático. Responde estrictamente con JSON.', 'gemini-3.5-flash-lite', 0.3, 1000, false, 5),
+  ('luxia_contracts', 'Auditor de Contratos y Riesgo Legal', 'Rol: Eres Luxia IA Auditor Legal Senior. Analiza cláusulas de contratos, penalidades de SLA, condiciones de pago y volumen mínimo Take-or-Pay. Responde estrictamente con JSON.', 'gemini-3.6-flash', 0.1, 2048, false, 5),
+  ('luxia_copilot', 'Copiloto de Voz y Dictados de Terreno', 'Rol: Eres Luxia Copilot. Interpreta notas de voz y comandos en lenguaje natural para crear interacciones, leads o actualizar clientes. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1000, false, 5),
+  ('luxia_search', 'Buscador Inteligente de Ficha de Cliente', 'Rol: Eres Luxia Search Agent. Responde consultas estratégicas sobre la ficha del cliente cruzando bitácora, contratos y contactos. Responde estructuradamente en viñetas Markdown.', 'gemini-3.5-flash', 0.2, 1500, false, 5),
+  ('luxia_triage', 'Triage y Criticidad de Bitácora', 'Rol: Eres Luxia IA Triage. Evalúa el impacto comercial y urgencia de cada nota o reunión registrada en el sistema. Responde estrictamente con JSON.', 'gemini-3.5-flash-lite', 0.1, 800, false, 5),
+  ('luxia_architect', 'Metrics Studio Architect', 'Rol: Eres Metrics Studio Architect. Traduce preguntas analíticas en configuraciones de consultas y gráficos Recharts. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.1, 1200, false, 5),
+  ('luxia_exam', 'Evaluador de Capacitación Comercial', 'Rol: Eres Luxia Exam Evaluator. Califica respuestas prácticas de casos de estudio y genera retroalimentación pedagógica en Markdown. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1500, false, 5),
+  ('luxia_support', 'Soporte Conversacional (Manuales)', 'Rol: Eres Luxia Support. Asiste a los usuarios paso a paso en el uso del CRM basado en los manuales de operaciones RAG. Responde amigablemente en Markdown.', 'gemini-3.5-flash-lite', 0.3, 1200, false, 5),
+  ('luxia_lead_scorer', 'Calificador de Leads B2B (ICP Scorer)', 'Rol: Eres Luxia Lead Scorer. Califica el encaje de un prospecto comercial con el perfil de cliente ideal (ICP) calculando score y prioridad. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1000, false, 5),
+  ('luxia_pipeline_health', 'Auditor de Pipeline de Ventas', 'Rol: Eres Luxia Pipeline Auditor. Evalúa estancamiento de oportunidades y probabilidad real de cierre según interacciones recientes. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1000, false, 5),
+  ('luxia_ia_auditor', 'Auditor de Calidad y Base de Conocimiento', 'Rol: Eres Luxia IA Auditor. Analiza el feedback negativo de los usuarios para proponer nuevos artículos de ayuda y manuales operativos. Responde estrictamente con JSON.', 'gemini-3.5-flash', 0.2, 1500, false, 5)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. CONFIGURACIÓN GLOBAL DE PIPELINES Y SEGURIDAD

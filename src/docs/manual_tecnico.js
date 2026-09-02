@@ -97,8 +97,8 @@ Todas las solicitudes autenticadas requieren el encabezado:
 * **Endpoint**: \`POST /v1/contratos\`
 * **Campos clave**: \`numeroContrato\`, \`modalidadPago\` (*canje_cereal, dolar_link*), \`monto\`, \`volumenHas\`.
 
-#### 4.7 Notificación de Despacho y Remito a Campo
-* **Endpoint**: \`POST /v1/despachos/notificacion\`
+#### 4.7 Notificación de Entrega y Remito a Campo
+* **Endpoint**: \`POST /v1/entregas/notificacion\`
 * **Payload**: \`{ "clienteId": "...", "remitoNumero": "R-0001-00045123", "productos": [ { "sku": "HERB-GLIFO-II", "litros": 2000 } ], "estadoEntrega": "entregado_a_campo" }\`
 
 ---
@@ -110,5 +110,5 @@ El sistema despacha payloads firmados criptográficamente (\`X-Luxia-Signature\`
 * \`opportunity.stage_changed\` / \`opportunity.won\`
 * \`contract.signed\` / \`contract.expiring_soon\`
 * \`client.health_critical\`
-* \`despacho.notificacion\`
+* \`entrega.notificacion\`
 `;

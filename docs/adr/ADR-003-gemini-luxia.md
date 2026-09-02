@@ -1,4 +1,4 @@
-# ADR-003: Arquitectura de Agentes Sentinel IA con Google Gemini 3
+# ADR-003: Arquitectura de Agentes Luxia IA con Google Gemini 3
 
 ## Estado
 Aceptado (2026-09-01)

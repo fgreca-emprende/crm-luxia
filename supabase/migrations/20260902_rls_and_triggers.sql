@@ -42,9 +42,9 @@ BEGIN
   
   IF u_role IN ('superadmin', 'admin') THEN
     RETURN 'ALL';
-  ELSIF u_role IN ('supervisor', 'supervisor_cx') THEN
+  ELSIF u_role = 'supervisor' THEN
     RETURN 'TEAM';
-  ELSIF u_role IN ('agente', 'agente_cx') THEN
+  ELSIF u_role = 'agente' THEN
     RETURN 'OWN';
   ELSE
     RETURN 'ALL';
@@ -182,7 +182,7 @@ FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 CREATE POLICY "tickets_update_policy" ON public.tickets
 FOR UPDATE USING (
-  public.is_admin() OR agente_id = auth.uid() OR public.current_user_role() IN ('supervisor_cx', 'agente_cx')
+  public.is_admin() OR agente_id = auth.uid()
 );
 
 CREATE POLICY "ticket_mensajes_select_policy" ON public.ticket_mensajes
@@ -256,7 +256,7 @@ CREATE OR REPLACE FUNCTION public.protect_clientes_system_fields()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NOT public.is_admin() AND (NEW.health_score IS DISTINCT FROM OLD.health_score) THEN
-    RAISE EXCEPTION 'No está autorizado para modificar directamente el Health Score de Sentinel IA.';
+    RAISE EXCEPTION 'No está autorizado para modificar directamente el Health Score de Luxia IA.';
   END IF;
   NEW.updated_at = NOW();
   RETURN NEW;

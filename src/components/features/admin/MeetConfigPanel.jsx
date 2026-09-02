@@ -185,7 +185,7 @@ export function MeetConfigPanel({ user }) {
                 <i className="bi bi-check2-square text-info fs-5"></i>
               </div>
               <div className="flex-fill">
-                <label className="form-label fw-bold mb-1 text-dark small">Despacho Automático de Tareas</label>
+                <label className="form-label fw-bold mb-1 text-dark small">Asignación Automática de Tareas</label>
                 <p className="text-muted mb-2" style={{ fontSize: '0.72rem', lineHeight: '1.2' }}>
                   Cuando LUXIA IA detecta accionables en la llamada, crear tareas automáticamente asignadas en el módulo del CRM.
                 </p>

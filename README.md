@@ -1,6 +1,6 @@
 # CRM Enterprise Luxia
 
-Sistema de Gestión de Clientes, Pipeline Comercial, Operaciones y Mesa de Ayuda (CX) de nivel empresarial, equipado con Inteligencia Artificial analítica (**Sentinel IA**) y una experiencia de usuario de alta gama (**Apple Command SuperBar**).
+Sistema de Gestión de Clientes, Pipeline Comercial, Operaciones y Mesa de Ayuda (CX) de nivel empresarial, equipado con Inteligencia Artificial analítica (**Luxia IA**) y una experiencia de usuario de alta gama (**Apple Command SuperBar**).
 
 ---
 
@@ -9,22 +9,26 @@ Sistema de Gestión de Clientes, Pipeline Comercial, Operaciones y Mesa de Ayuda
 - **Frontend:** Single Page Application (SPA) construida en **React 19**, **Vite**, Vanilla CSS y Sistema de Diseño **Liquid Glass (Apple HIG)**.
 - **Backend & Worker:** API REST y ejecutor de tareas asíncronas / cron jobs en **Node.js + Express** (Ubicado en `server/`).
 - **Base de Datos & Auth:** **PostgreSQL en Supabase** con seguridad declarativa mediante **Row-Level Security (RLS)** y autenticación JWT.
-- **Motor de Inteligencia Artificial:** **Sentinel IA** potenciado por Google Gemini (Health Score predictivo, resúmenes automáticos, auditoría de calidad y copiloto de ventas).
+- **Motor de Inteligencia Artificial:** **Luxia IA** potenciado por Google Gemini (Health Score predictivo, resúmenes automáticos, auditoría de calidad y copiloto de ventas).
+- **Backend Worker Local & Webhooks**: Node.js + Express para tareas en segundo plano, sincronización de tokens e integraciones omnicanal (WhatsApp y Slack).
+- **Control de Acceso Basado en Roles (RBAC)**: Matriz de permisos dinámica (`config_permisos`) con scopes configurables (`ALL`, `TEAM`, `OWN`) por rol.
+- **Capacitación Comercial Automatizada (Luxia Exam)**: Módulo interactivo con calificación automática de casos prácticos por IA.
+- **Metrics Studio & KPIs**: Constructor de gráficos y dashboards de analítica de ventas y retención.
 
 ---
 
-## 2. Módulos Principales
+## 🚀 Estructura de Módulos Visuales (Pestañas)
 
-1. **📊 Inteligencia (Dashboard & KPIs)**: Métricas en tiempo real de MRR, ARR, conversión, cartera activa y monitor de disponibilidad de agentes.
-2. **💼 Comercial**:
-   - **Prospección (Leads)**: Captura, calificación territorial y scoring predictivo.
-   - **Pipeline de Ventas (CLM)**: Negociaciones por etapas, contratos y proyecciones de cierre.
-3. **⚡ Operaciones**:
-   - **Gestión de Clientes (Ficha 360°)**: Historial completo, SLA, bitácoras, contactos y contratos vigentes.
-   - **Tablero CRM (Kanban)**: Gestión de actividades, onboarding y cuentas clave.
-4. **🎧 Soporte & CX**: Bandeja omnicanal de tickets con notas privadas (*whisper notes*), SLA y encuestas CSAT.
-5. **🔔 Alertas de Riesgo**: Detección temprana de churn, mora y degradación de servicio.
-6. **⚙️ Centro de Control (Admin)**: Configuración de permisos RBAC, catálogo de servicios, modelos de IA, prompts de Sentinel y observabilidad del sistema.
+1. **📊 Analítica / Dashboard**: Vista gerencial con KPIs, salud del pipeline y distribución por país.
+2. **🎯 Inteligencia Comercial**:
+   - **Prospectos (Leads)**: Captura inbound, puntuación por IA y seguimiento.
+   - **Oportunidades**: Pipeline Kanban interactivo con fases comercialmente reguladas.
+3. **🏢 Gestión de Cuentas**:
+   - **Clientes**: Ficha 360° con Health Score, timeline de interacciones y gestión de adendas.
+   - **Contratos**: Control de vigencia, renovaciones y adjuntos contractuales.
+4. **💬 Soporte & CX**: Consola omnicanal para gestión de tickets y mensajería directa por WhatsApp.
+5. **🎓 Capacitación**: Módulo de autoevaluación comercial y certificación interna.
+6. **⚙️ Centro de Control (Admin)**: Configuración de permisos RBAC, catálogo de servicios, modelos de IA, prompts de Luxia y observabilidad del sistema.
 
 ---
 
@@ -89,7 +93,7 @@ npm start
 ## 6. Documentación del Sistema
 
 - 🎨 **[Guía de Estilo y Sistema de Diseño (STYLE_GUIDE.md)](file:///e:/crm-luxia/STYLE_GUIDE.md)**: Especificación de la paleta oficial de Apple macOS Sequoia & iOS 18, materiales Liquid Glass, tokens CSS, componentes y reglas visuales.
-- 🏛️ **[Arquitectura y Principios del Sistema (ARCHITECTURE.md)](file:///e:/crm-luxia/ARCHITECTURE.md)**: Estructura técnica, diagrama de datos, Backend Worker y Sentinel IA.
+- 🏛️ **[Arquitectura y Principios del Sistema (ARCHITECTURE.md)](file:///e:/crm-luxia/ARCHITECTURE.md)**: Estructura técnica, diagrama de datos, Backend Worker y Luxia IA.
 - 🗄️ **[Diseño de Base de Datos PostgreSQL (docs/SCHEMA.md)](file:///e:/crm-luxia/docs/SCHEMA.md)**: Esquema de tablas relacionales en Supabase y políticas RLS.
 - 🔒 **[Gobernanza de Secretos (docs/README_SECRETS.md)](file:///e:/crm-luxia/docs/README_SECRETS.md)**: Gestión de credenciales seguras en producción.
 - 🤝 **[Guía de Contribución (CONTRIBUTING.md)](file:///e:/crm-luxia/CONTRIBUTING.md)**: Flujo de trabajo en Git y validación previa a PRs.
