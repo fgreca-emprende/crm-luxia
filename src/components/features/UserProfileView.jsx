@@ -50,7 +50,6 @@ export function UserProfileView({
   const [whatsappGlobalLimit, setWhatsappGlobalLimit] = useState(150);
 
   const [gmailConfig, setGmailConfig] = useState(null);
-  const [slackConfig, setSlackConfig] = useState(null);
 
   const [exchangeRates, setExchangeRates] = useState({ USD: 1, ARS: 1250, CLP: 940, PEN: 3.7, COP: 4100, MXN: 18 });
 
@@ -73,8 +72,6 @@ export function UserProfileView({
       try {
         const gConf = await getConfigGeneral('gmail_config');
         if (gConf) setGmailConfig(gConf);
-        const sConf = await getConfigGeneral('slack_config');
-        if (sConf) setSlackConfig(sConf);
       } catch (err) {
         // Safe fallback
       }
@@ -92,24 +89,13 @@ export function UserProfileView({
   };
 
   const [emailNotif, setEmailNotif] = useState(true);
-  const [slackNotif, setSlackNotif] = useState(true);
-  const [slackConnected, setSlackConnected] = useState(false);
-  const [slackInfo, setSlackInfo] = useState(null);
   const [savingNotif, setSavingNotif] = useState(false);
 
-  // Resolver la URL de la API del Backend según el entorno
+  // Resolver la URL de la API del Backend según el entorno (para integraciones como Gmail)
   const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('slack_connected') === 'true') {
-      showAlert('Cuenta de Slack vinculada exitosamente.', 'success');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    if (params.get('slack_error')) {
-      showAlert(`Error de Slack: ${params.get('slack_error')}`, 'danger');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
     if (params.get('gmail_connected') === 'true') {
       showAlert('Cuenta de Gmail vinculada exitosamente.', 'success');
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -143,9 +129,6 @@ export function UserProfileView({
           setProfileData(userDocData);
           const savedNotifs = JSON.parse(localStorage.getItem(`user_notif_pref_${user.email}`) || '{}');
           setEmailNotif(savedNotifs.email !== false);
-          setSlackNotif(savedNotifs.slack !== false);
-          setSlackConnected(userDocData.slack_sync?.connected || false);
-          setSlackInfo(userDocData.slack_sync || null);
         } else {
           const baseData = {
             id: user.uid || user.id,
@@ -155,13 +138,11 @@ export function UserProfileView({
             equipo: 'Global',
             estado_presencia: 'Conectado',
             notifications_config: {
-              email: { enabled: true },
-              slack: { enabled: true }
+              email: { enabled: true }
             }
           };
           setProfileData(baseData);
           setEmailNotif(true);
-          setSlackNotif(true);
         }
       } catch (err) {
         console.warn('Error loading user profile:', err.message);
@@ -278,57 +259,12 @@ export function UserProfileView({
     }
   };
 
-  const handleConnectSlack = async () => {
-    if (!user?.email) return;
-    setSavingNotif(true);
-    try {
-      const slackConfig = await getConfigGeneral('slack_config');
-      if (!slackConfig || !slackConfig.clientId || !slackConfig.active) {
-        showAlert('La integración de Slack no está activa o configurada en la consola de administración.', 'danger');
-        return;
-      }
-      const redirectOrigin = window.location.origin;
-      const authUrl = `${apiBaseUrl}/slack/auth?email=${encodeURIComponent(user.email)}&uid=${encodeURIComponent(user.uid || '')}&redirect=${encodeURIComponent(redirectOrigin)}`;
-      window.location.href = authUrl;
-    } catch (err) {
-      console.error('Error prechecking Slack configuration:', err);
-      showAlert('Error al validar la configuración de Slack.', 'danger');
-    } finally {
-      setSavingNotif(false);
-    }
-  };
-
-  const handleDisconnectSlack = async () => {
-    if (!user?.email) return;
-    try {
-      await supabase
-        .from('usuarios')
-        .update({
-          slack_sync: {
-            connected: false,
-            slackUserId: null,
-            slackUserMail: null,
-            connectedAt: null
-          }
-        })
-        .or(`id.eq.${user.uid || user.id},email.eq.${user.email}`);
-
-      setSlackConnected(false);
-      setSlackInfo(null);
-      showAlert('Cuenta de Slack desvinculada exitosamente.', 'success');
-    } catch (err) {
-      console.error('Error disconnecting Slack:', err);
-      showAlert('Error al desvincular la cuenta de Slack.', 'danger');
-    }
-  };
-
-  const handleSavePreferences = async (emailEnabled, slackEnabled) => {
+  const handleSavePreferences = async (emailEnabled) => {
     if (!user?.email) return;
     setSavingNotif(true);
     try {
       localStorage.setItem(`user_notif_pref_${user.email}`, JSON.stringify({
-        email: emailEnabled,
-        slack: slackEnabled
+        email: emailEnabled
       }));
 
       await supabase
@@ -656,10 +592,10 @@ export function UserProfileView({
             </div>
           </div>
 
-          {/* Slack & Notifications Card */}
+          {/* Centro de Notificaciones Card */}
           <div className="col-md-6 d-flex">
             <div className="card border-0 bg-white shadow-sm rounded-4 position-relative overflow-hidden w-100 d-flex flex-column justify-content-between">
-              <div className="position-absolute top-0 start-0 w-100" style={{ height: '4px', backgroundColor: '#E01E5A' }}></div>
+              <div className="position-absolute top-0 start-0 w-100" style={{ height: '4px', backgroundColor: '#0284c7' }}></div>
               
               <div className="card-body p-4 d-flex flex-column justify-content-between h-100">
                 <div>
@@ -697,27 +633,7 @@ export function UserProfileView({
                           disabled={savingNotif}
                           onChange={(e) => {
                             setEmailNotif(e.target.checked);
-                            handleSavePreferences(e.target.checked, slackNotif);
-                          }}
-                        />
-                      </div>
-
-                      <div className="form-check form-switch d-flex justify-content-between align-items-center ps-0 border-top pt-3">
-                        <div>
-                          <label className="form-check-label fw-bold text-dark small d-block" htmlFor="slackNotifSwitch" style={{ fontSize: '0.8rem' }}>
-                            <i className="bi bi-slack text-muted me-2"></i> Slack Direct Message
-                          </label>
-                          <span className="text-muted" style={{ fontSize: '0.7rem' }}>Mensaje directo de nuestro bot en Slack.</span>
-                        </div>
-                        <input
-                          className="form-check-input cursor-pointer"
-                          type="checkbox"
-                          id="slackNotifSwitch"
-                          checked={slackNotif}
-                          disabled={savingNotif || (slackConfig && slackConfig.active === false)}
-                          onChange={(e) => {
-                            setSlackNotif(e.target.checked);
-                            handleSavePreferences(emailNotif, e.target.checked);
+                            handleSavePreferences(e.target.checked);
                           }}
                         />
                       </div>
@@ -788,69 +704,6 @@ export function UserProfileView({
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Vinculación Slack OAuth */}
-                <div className="border-top pt-3 mt-auto">
-                  {slackConfig && slackConfig.active === false && (
-                    <div className="alert alert-warning py-2 px-3 rounded-3 mb-3 border border-warning border-opacity-25 bg-warning bg-opacity-10 text-warning d-flex align-items-center gap-2" style={{ fontSize: '0.72rem' }}>
-                      <i className="bi bi-exclamation-triangle-fill fs-6 text-warning"></i>
-                      <div className="text-start">
-                        <strong>Slack Desactivado:</strong> Las notificaciones de Slack han sido deshabilitadas globalmente por la administración de Luxia.
-                      </div>
-                    </div>
-                  )}
-                  <h6 className="fw-bold text-dark mb-2" style={{ fontSize: '0.85rem' }}>Vinculación de Slack</h6>
-                   {slackConfig && slackConfig.active === false ? (
-                    <div className="p-2 bg-light border border-dashed rounded-4 d-flex justify-content-between align-items-center flex-wrap gap-2 text-muted">
-                      <div className="d-flex align-items-center gap-2">
-                        <i className="bi bi-pause-circle-fill text-muted fs-5"></i>
-                        <div>
-                          <span className="fw-bold text-muted d-block" style={{ fontSize: '0.75rem' }}>Vinculación Inactiva</span>
-                          <span className="small text-muted" style={{ fontSize: '0.68rem' }}>Deshabilitada globalmente</span>
-                        </div>
-                      </div>
-                      <button
-                        className="btn btn-xs btn-outline-secondary rounded-pill px-2 fw-bold"
-                        style={{ fontSize: '0.7rem' }}
-                        disabled={true}
-                      >
-                        Suspendido
-                      </button>
-                    </div>
-                  ) : slackConnected ? (
-                    <div className="p-2 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                      <div className="d-flex align-items-center gap-2">
-                        <i className="bi bi-check-circle-fill text-success fs-5"></i>
-                        <div>
-                          <span className="fw-bold text-success d-block" style={{ fontSize: '0.75rem' }}>Slack Conectado</span>
-                          <span className="small text-muted" style={{ fontSize: '0.68rem' }}>ID: {slackInfo?.slackUserId}</span>
-                        </div>
-                      </div>
-                      <button
-                        className="btn btn-xs btn-outline-danger rounded-pill px-2 fw-bold"
-                        style={{ fontSize: '0.7rem' }}
-                        onClick={handleDisconnectSlack}
-                      >
-                        Desconectar
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="p-2 bg-light border rounded-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                      <div>
-                        <span className="fw-bold text-dark d-block" style={{ fontSize: '0.75rem' }}>Slack desvinculado</span>
-                      </div>
-                      <button
-                        className="btn btn-xs btn-primary rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1"
-                        style={{ backgroundColor: '#E01E5A', borderColor: '#E01E5A', fontSize: '0.72rem' }}
-                        onClick={handleConnectSlack}
-                        disabled={savingNotif || (slackConfig && slackConfig.active === false)}
-                      >
-                        <i className="bi bi-slack"></i>
-                        Vincular Slack
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

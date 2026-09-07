@@ -5,7 +5,6 @@ import { SpinnerPremium } from '../ui/SpinnerPremium';
 import { useUserRole } from '../../contexts/UserRoleContext';
 
 // Subcomponents
-import { SlackConfigCard } from './integrations/components/SlackConfigCard';
 import { GmailConfigCard } from './integrations/components/GmailConfigCard';
 import { ApiKeysConsole } from './integrations/components/ApiKeysConsole';
 import { OutboundWebhooksManager } from './integrations/components/OutboundWebhooksManager';
@@ -20,21 +19,13 @@ export function IntegrationsManager() {
   const [loading, setLoading] = useState(true);
 
   // Core configurations to pass down
-  const [slackConfig, setSlackConfig] = useState(null);
   const [gmailConfig, setGmailConfig] = useState(null);
 
   useEffect(() => {
     const loadConfigurations = async () => {
       setLoading(true);
       try {
-        const [slackData, gmailData] = await Promise.all([
-          getConfigGeneral('slack_config'),
-          getConfigGeneral('gmail_config')
-        ]);
-
-        if (slackData) {
-          setSlackConfig(slackData);
-        }
+        const gmailData = await getConfigGeneral('gmail_config');
 
         if (gmailData) {
           setGmailConfig(gmailData);
@@ -117,9 +108,6 @@ export function IntegrationsManager() {
             </div>
             <div className="col-12">
               <GmailConfigCard initialConfig={gmailConfig} />
-            </div>
-            <div className="col-12">
-              <SlackConfigCard initialConfig={slackConfig} />
             </div>
           </>
         )}
