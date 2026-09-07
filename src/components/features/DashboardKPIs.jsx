@@ -5,14 +5,13 @@ import { getConfigGeneral, setConfigGeneral } from '../../lib/configGeneral';
 import { dbTracker } from '../../lib/api';
 import { KPIsGrid } from './dashboard/KPIsGrid';
 import { ChartsPanel } from './dashboard/ChartsPanel';
-import { GamificationPanel } from './dashboard/GamificationPanel';
 import { DynamicChartsPanel } from './dashboard/DynamicChartsPanel';
 import { PipelineChartsPanel } from './dashboard/PipelineChartsPanel';
 import { AgentPresenceMonitor } from './dashboard/AgentPresenceMonitor';
 
 export function DashboardKPIs({ selectedCountry, user }) {
   const today = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-  const [activeTab, setActiveTab] = useState('pipeline'); // 'pipeline', 'cartera' o 'logros'
+  const [activeTab, setActiveTab] = useState('pipeline'); // 'pipeline' o 'cartera'
   
   const normalizarEquipo = (teamStr) => {
     if (!teamStr) return '';
@@ -42,13 +41,13 @@ export function DashboardKPIs({ selectedCountry, user }) {
           setEquipos(conf.lista);
         } else {
           setEquipos([
-            { id: 'Global', nombre: 'Global', participaGamificacion: false },
-            { id: 'CX', nombre: 'CX (Atención al Cliente)', participaGamificacion: true },
-            { id: 'Adquisicion', nombre: 'Adquisición (Hunting)', participaGamificacion: true },
-            { id: 'Retencion', nombre: 'Retención (Farming)', participaGamificacion: true },
-            { id: 'Administracion', nombre: 'Administración', participaGamificacion: false },
-            { id: 'Finanzas', nombre: 'Finanzas', participaGamificacion: false },
-            { id: 'Legales', nombre: 'Legales', participaGamificacion: false }
+            { id: 'Global', nombre: 'Global' },
+            { id: 'CX', nombre: 'CX (Atención al Cliente)' },
+            { id: 'Adquisicion', nombre: 'Adquisición (Hunting)' },
+            { id: 'Retencion', nombre: 'Retención (Farming)' },
+            { id: 'Administracion', nombre: 'Administración' },
+            { id: 'Finanzas', nombre: 'Finanzas' },
+            { id: 'Legales', nombre: 'Legales' }
           ]);
         }
       } catch (err) {
@@ -154,7 +153,7 @@ export function DashboardKPIs({ selectedCountry, user }) {
       const normU = normalizarEquipo(u.equipo);
       
       // 1. Filtrar por el tab activo
-      if (activeTab === 'pipeline' || activeTab === 'cartera' || activeTab === 'logros') {
+      if (activeTab === 'pipeline' || activeTab === 'cartera') {
         if (normU !== 'adquisicion' && normU !== 'retencion') return false;
       }
       
@@ -173,33 +172,6 @@ export function DashboardKPIs({ selectedCountry, user }) {
       return u.email?.toLowerCase().trim() === user?.email?.toLowerCase().trim();
     });
   }, [comerciales, activeTab, role, normalizedTeam, isAdmin, user]);
-
-  // Lista de usuarios filtrada para Gamificación
-  const filteredGamersList = useMemo(() => {
-    const participatingTeamIds = new Set(
-      equipos
-        .filter(eq => eq.participaGamificacion)
-        .map(eq => normalizarEquipo(eq.id))
-    );
-
-    return comerciales.filter(u => {
-      const normU = normalizarEquipo(u.equipo);
-      
-      if (!participatingTeamIds.has(normU)) {
-        return false;
-      }
-      
-      const normView = normalizarEquipo(dashboardView);
-      if (normView && normView !== 'global') {
-        if (normView === 'soporte' || normView === 'cx') {
-          return normU === 'soporte' || normU === 'cx';
-        }
-        return normU === normView;
-      }
-      
-      return true;
-    });
-  }, [comerciales, equipos, dashboardView]);
 
   useEffect(() => {
     if (selectedComercial) {
@@ -238,10 +210,6 @@ export function DashboardKPIs({ selectedCountry, user }) {
     };
     fetchExchangeRates();
   }, []);
-  const [gamification, setGamification] = useState({
-    churnStreakDays: 0,
-    dataQualityScore: 0
-  });
 
   // --- Pipeline & Leads State & Subscriptions ---
   const [leadsData, setLeadsData] = useState([]);
@@ -464,13 +432,6 @@ export function DashboardKPIs({ selectedCountry, user }) {
           },
           loading: false
         }));
-
-        const qualityScore = totalDataQualityFields > 0 ? Math.round((filledDataQualityFields / totalDataQualityFields) * 100) : 0;
-        let streakDays = mostRecentChurnDate 
-          ? Math.max(0, Math.floor((new Date() - mostRecentChurnDate) / (1000 * 60 * 60 * 24)))
-          : 999;
-
-        setGamification({ churnStreakDays: streakDays, dataQualityScore: qualityScore });
       } catch (err) {
         console.error("Error fetching clients for dashboard:", err);
       }
@@ -737,14 +698,6 @@ export function DashboardKPIs({ selectedCountry, user }) {
             <i className="bi bi-pie-chart"></i>
             <span>Resumen de Cartera</span>
           </button>
-          <button 
-            type="button"
-            className={`apple-segmented-item ${activeTab === 'logros' ? 'active' : ''}`}
-            onClick={() => setActiveTab('logros')}
-          >
-            <i className="bi bi-controller"></i>
-            <span>Logros y Gamificación</span>
-          </button>
         </div>
 
         {/* Filtros Contextuales (Comerciales y Pipeline Scope) */}
@@ -815,14 +768,6 @@ export function DashboardKPIs({ selectedCountry, user }) {
           <KPIsGrid metrics={metrics} financeStats={financeStats} />
           <ChartsPanel metrics={metrics} historyData={historyData} />
         </>
-      )}
-
-      {/* ==================== VISTA 2: LOGROS Y GAMIFICACIÓN ==================== */}
-      {activeTab === 'logros' && (
-        <GamificationPanel
-          gamification={gamification}
-          comerciales={filteredGamersList}
-        />
       )}
 
       {/* ==================== KPIs DINÁMICOS POR SOLAPA ==================== */}

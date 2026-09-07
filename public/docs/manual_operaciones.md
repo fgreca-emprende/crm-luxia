@@ -403,7 +403,7 @@ Gestión de usuarios del CRM, invitaciones y equipos.
 *   **Gestión de Invitaciones por Correo (SMTP Queue):**
     *   *Plantilla de Invitación:* Permite configurar el asunto y cuerpo de la invitación por correo. Soporta las variables dinámicas `{{email}}`, `{{rol}}` y `{{equipo}}`.
     *   *Cola de Correos (`cola_correos`):* Panel de observabilidad técnica que muestra los correos pendientes de envío, en proceso, enviados o fallidos, con detalle de fecha, hora y logs de error SMTP en real.
-*   **Estructura de Equipos:** Definición de divisiones de trabajo (Adquisición, Retención, CX) con un interruptor (`participaGamificacion`) que determina si el equipo compite en el Leaderboard por XP.
+*   **Estructura de Equipos:** Definición de divisiones de trabajo operativas y comerciales (Adquisición, Retención, CX) para organización territorial y asignación de cartera.
 *   **Regla de Gobernanza de Equipos para Administradores:** Por arquitectura de seguridad y permisos globales, los usuarios con rol **Admin** o **SuperAdmin** pertenecen de manera obligatoria y exclusiva al equipo **Global**. Al invitar o modificar el rol de un usuario a Admin o SuperAdmin, el sistema fija automáticamente su equipo en *Global* e inhabilita su reasignación a equipos específicos en la consola de usuarios.
 
 ### Guías Paso a Paso

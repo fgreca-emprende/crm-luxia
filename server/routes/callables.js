@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { generateLuxiaContent } = require('../services/luxiaCore');
-const { processUserAction } = require('../services/gamificationService');
 
 /**
  * Middleware para validar el JWT de Supabase en las peticiones del frontend
@@ -155,8 +154,6 @@ Devuelve un JSON con:
         ultimoScore: scoreGlobal
       }
     }).eq('id', user.id);
-
-    await processUserAction(user.id, 'aprobar_examen', supabase);
   }
 
   return res.json({

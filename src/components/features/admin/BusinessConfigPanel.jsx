@@ -177,17 +177,16 @@ export function BusinessConfigPanel({ user, mode }) {
       const { data: eqData } = await supabase.from('equipos').select('*');
       let listEquipos = (eqData || []).map(d => ({
         id: d.id,
-        nombre: d.nombre,
-        participaGamificacion: d.participa_gamificacion || false
+        nombre: d.nombre
       }));
 
       if (listEquipos.length === 0) {
         const defaultEquipos = [
-          { id: 'Global', nombre: 'Global', participaGamificacion: false },
-          { id: 'CX', nombre: 'CX (Atención al Cliente)', participaGamificacion: true },
-          { id: 'Adquisicion', nombre: 'Adquisición (Hunting)', participaGamificacion: true },
-          { id: 'Retencion', nombre: 'Retención (Farming)', participaGamificacion: true },
-          { id: 'Operaciones', nombre: 'Operaciones', participaGamificacion: false }
+          { id: 'Global', nombre: 'Global' },
+          { id: 'CX', nombre: 'CX (Atención al Cliente)' },
+          { id: 'Adquisicion', nombre: 'Adquisición (Hunting)' },
+          { id: 'Retencion', nombre: 'Retención (Farming)' },
+          { id: 'Operaciones', nombre: 'Operaciones' }
         ];
 
         for (const eq of defaultEquipos) {
@@ -347,10 +346,6 @@ export function BusinessConfigPanel({ user, mode }) {
     }
   };
 
-  const handleToggleGamificacion = (id) => {
-    setEquipos(prev => prev.map(eq => eq.id === id ? { ...eq, participaGamificacion: !eq.participaGamificacion } : eq));
-  };
-
   const handleRenameTeam = (id, newName) => {
     setEquipos(prev => prev.map(eq => eq.id === id ? { ...eq, nombre: newName } : eq));
   };
@@ -396,8 +391,7 @@ export function BusinessConfigPanel({ user, mode }) {
     }
     const newTeam = {
       id: cleanId,
-      nombre: newTeamName.trim(),
-      participaGamificacion: false
+      nombre: newTeamName.trim()
     };
     setEquipos(prev => [...prev, newTeam].sort((a, b) => a.nombre.localeCompare(b.nombre)));
     setNewTeamId('');
@@ -782,17 +776,15 @@ export function BusinessConfigPanel({ user, mode }) {
         </div>
       )}
 
-
-
-      {/* CARD 3: CONFIGURACIÓN DE EQUIPOS Y GAMIFICACIÓN */}
+      {/* CARD 3: CONFIGURACIÓN DE EQUIPOS */}
       {(!mode || mode === 'equipos') && (
         <div className="col-12">
           <div className="card border-0 bg-light p-4 rounded-4 shadow-sm">
             <h5 className="fw-bold mb-3 text-dark">
-              <i className="bi bi-people me-2 text-primary"></i>Configuración de Equipos y Gamificación
+              <i className="bi bi-people me-2 text-primary"></i>Configuración de Equipos
             </h5>
             <p className="small text-muted mb-4">
-              Administra la estructura de equipos de la empresa y define qué equipos participan activamente en las dinámicas y leaderboards de gamificación del CRM.
+              Administra la estructura de equipos comerciales y operativos de la empresa.
             </p>
             
             <div className="table-responsive bg-white p-3 rounded-4 border border-light shadow-sm mb-4">
@@ -801,7 +793,6 @@ export function BusinessConfigPanel({ user, mode }) {
                   <tr>
                     <th className="fw-bold border-0 rounded-start">Código ID</th>
                     <th className="fw-bold border-0">Nombre de la Pestaña / Equipo</th>
-                    <th className="fw-bold border-0 text-center">Participa en Gamificación</th>
                     <th className="fw-bold border-0 text-end rounded-end">Acciones</th>
                   </tr>
                 </thead>
@@ -817,17 +808,6 @@ export function BusinessConfigPanel({ user, mode }) {
                           value={eq.nombre}
                           onChange={e => handleRenameTeam(eq.id, e.target.value)}
                         />
-                      </td>
-                      <td className="text-center">
-                        <div className="form-check form-switch d-inline-block">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            role="switch"
-                            checked={eq.participaGamificacion}
-                            onChange={() => handleToggleGamificacion(eq.id)}
-                          />
-                        </div>
                       </td>
                       <td className="text-end">
                         <button 

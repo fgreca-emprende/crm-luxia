@@ -45,8 +45,7 @@ La base de datos Firestore está estructurada en colecciones raíz y subcoleccio
 
 /equipos/{equipoId}
   ├── id (string)
-  ├── nombre (string)
-  └── participaGamificacion (boolean)
+  └── nombre (string)
 
 /config_secciones/{seccionId}
   ├── id (string)

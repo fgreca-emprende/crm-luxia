@@ -28,7 +28,7 @@ Los colores de acento se adaptan dinámicamente según el modo activo (**Claro C
 | `--apple-blue` | `#0071E3` (Accesible) | `#0A84FF` (Vibrante) | Acciones primarias, selección activa, enlaces y focos |
 | `--apple-purple` | `#AF52DE` | `#BF5AF2` | Luxia IA, análisis predictivo, inteligencia y ML |
 | `--apple-indigo` | `#5856D6` | `#5E5CE6` | Integraciones, webhooks, sincronizaciones y APIs |
-| `--apple-pink` | `#FF2D55` | `#FF375F` | Notificaciones destacadas, gamificación y logros |
+| `--apple-pink` | `#FF2D55` | `#FF375F` | Notificaciones destacadas y badges de atención especial |
 | `--apple-red` | `#FF3B30` | `#FF453A` | Alertas críticas, riesgo de churn, errores y peligro |
 | `--apple-orange` | `#FF9500` | `#FF9F0A` | Advertencias, SLA en riesgo, estados break y demoras |
 | `--apple-yellow` | `#FFCC00` | `#FFD60A` | Monedas, favoritos, scoring intermedio y destacados |
