@@ -195,17 +195,25 @@ export function OportunidadesView({ selectedCountry }) {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      let opQuery = supabase.from('oportunidades').select('*');
+      // PERF-01 / UX-01: Proyección explícita de columnas y límite controlado para prevenir sobrecarga de red
+      let opQuery = supabase
+        .from('oportunidades')
+        .select('id, cliente_id, nombre, etapa, monto_estimado_mensual, valor_contrato_anual, descuento_ofrecido_pct, contacto_principal_id, probabilidad, fecha_estimada_cierre, fecha_ultimo_cambio_etapa, competidor_ganador, perdida_razon, perdida_detalle, comercial_email, comercial_id, pais, tipo_pipeline, tipo_servicio, campos_dinamicos, created_at, updated_at')
+        .limit(500);
+
       if (selectedCountry) opQuery = opQuery.eq('pais', selectedCountry);
       opQuery = opQuery.order('created_at', { ascending: false });
 
-      let clientQuery = supabase.from('clientes').select('*');
+      let clientQuery = supabase
+        .from('clientes')
+        .select('id, nombre_empresa, cuit_rut_rfc, pais, estado, comercial_email')
+        .limit(1000);
       if (selectedCountry) clientQuery = clientQuery.eq('pais', selectedCountry);
 
       const [opsRes, clientsRes, usersRes, secRes, camposRes, servRes] = await Promise.all([
         opQuery,
         clientQuery,
-        supabase.from('usuarios').select('*'),
+        supabase.from('usuarios').select('id, email, nombre, rol, equipo, pais, activo'),
         supabase.from('config_secciones').select('*').eq('entidad', 'oportunidad').order('orden'),
         supabase.from('config_campos').select('*').order('orden'),
         supabase.from('config_servicios').select('*')

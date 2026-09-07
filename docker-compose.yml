@@ -156,7 +156,8 @@ services:
     container_name: crm-studio
     restart: unless-stopped
     ports:
-      - "${STUDIO_PORT:-3000}:3000"
+      # DEVOPS-04: Studio restringido a localhost (127.0.0.1) para evitar exposición pública en LAN/WAN
+      - "127.0.0.1:${STUDIO_PORT:-3000}:3000"
     environment:
       STUDIO_PG_META_URL: http://supabase-kong:8000/pg
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -186,7 +187,8 @@ services:
     ports:
       - "${PORT:-4000}:4000"
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
+      # DEVOPS-05: Entorno por defecto en modo producción
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: 4000
       SUPABASE_URL: http://supabase-kong:8000
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}

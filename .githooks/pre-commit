@@ -1,0 +1,15 @@
+#!/bin/sh
+# Pre-commit hook para CRM Luxia — Prevención de fugas de secretos
+STAGED_ENV=$(git diff --cached --name-only | grep -E '^\.env(\..+)?$' | grep -v '\.env\.example$')
+
+if [ -n "$STAGED_ENV" ]; then
+  echo "======================================================================"
+  echo "[ERROR DE SEGURIDAD] Intento de commit de archivo de entorno sensible:"
+  echo "  $STAGED_ENV"
+  echo "Los secretos y credenciales NUNCA deben comitearse en el repositorio Git."
+  echo "Por favor deshaz el stage con: git reset HEAD <archivo>"
+  echo "======================================================================"
+  exit 1
+fi
+
+exit 0

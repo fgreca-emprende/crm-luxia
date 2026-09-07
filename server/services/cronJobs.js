@@ -1,5 +1,19 @@
 const cron = require('node-cron');
 
+async function reportCronError(supabase, context, err) {
+  console.error(`[CRON ERROR][${context}]`, err);
+  try {
+    if (supabase) {
+      await supabase.from('logs_sistema').insert({
+        nivel: 'ERROR',
+        accion: `cron_${context}`,
+        descripcion: `Fallo en tarea programada: ${err.message || String(err)}`,
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (_) { /* bypass silent logging failure */ }
+}
+
 function initCronJobs(supabase) {
   console.log('[CRON] Inicializando tareas programadas locales con node-cron...');
 
@@ -33,7 +47,7 @@ function initCronJobs(supabase) {
         console.log(`[CRON] ${porVencer.length} alertas de contratos por vencer generadas.`);
       }
     } catch (err) {
-      console.error('[CRON] Error verificando contratos:', err);
+      await reportCronError(supabase, 'contratos_vencimiento', err);
     }
   });
 
@@ -66,7 +80,7 @@ function initCronJobs(supabase) {
         console.log(`[CRON] ${buffers.length} buffers de WhatsApp completados en batch.`);
       }
     } catch (err) {
-      console.error('[CRON] Error procesando buffers de WhatsApp:', err);
+      await reportCronError(supabase, 'whatsapp_buffer', err);
     }
   });
 
@@ -79,12 +93,12 @@ function initCronJobs(supabase) {
       });
 
       if (error) {
-        console.error('[CRON Purga Error]', error.message);
+        await reportCronError(supabase, 'purga_logs_rpc', error);
       } else {
         console.log('[CRON Purga Éxito] Registros purgados:', JSON.stringify(res?.registros_purgados));
       }
     } catch (cronErr) {
-      console.error('[CRON Purga Excepción]', cronErr);
+      await reportCronError(supabase, 'purga_logs_exception', cronErr);
     }
   });
 

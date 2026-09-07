@@ -1,11 +1,13 @@
 # Manual de Operaciones y Gobernanza CRM
 ### Luxia · Guía Operativa por Roles & Casos de Uso Regionales
 
-Este manual detalla las capacidades, flujos operativos y configuraciones del CRM-Luxia según los niveles de acceso y roles de seguridad (**Lector**, **Agente**, **Agente_CX**, **Supervisor**, **Supervisor_CX**, **Admin**, **SuperAdmin** y **Editor**).
+Este manual detalla las capacidades, flujos operativos y configuraciones del CRM-Luxia según los niveles de acceso y roles de seguridad (**Lector**, **Agente**, **Supervisor**, **Admin**, **SuperAdmin** y **Editor**).
 
 ---
 
-## 01. Navegación, Interfaz & Selector Regional [roles: lector, agente, agente_cx, supervisor, supervisor_cx, admin, superadmin, editor]
+---
+
+## 01. Navegación, Interfaz & Selector Regional [roles: lector, agente, supervisor, admin, superadmin, editor]
 El CRM-Luxia es una plataforma regional multipaís diseñada para centralizar la gestión de cuentas y operaciones en Argentina, Chile, Colombia, Perú y México.
 
 ### Funcionalidades Clave y Lógica Interna
@@ -36,7 +38,10 @@ El CRM-Luxia es una plataforma regional multipaís diseñada para centralizar la
 
 ---
 
-## 02. Tablero de Actividades & Dashboard de KPIs [roles: lector, agente, agente_cx, supervisor, supervisor_cx, admin, superadmin, editor]
+
+---
+
+## 02. Tablero de Actividades & Dashboard de KPIs [roles: lector, agente, supervisor, admin, superadmin, editor]
 El Tablero CRM es la pantalla principal de control del día a día, ofreciendo una vista operativa de tareas y un panel analítico.
 
 ### Funcionalidades Clave y Lógica Interna
@@ -65,6 +70,9 @@ El Tablero CRM es la pantalla principal de control del día a día, ofreciendo u
 1. Cambia el switch superior de la vista de **Tablero** a **Dashboard**.
 2. Utiliza el filtro regional global del CRM en la barra superior para segmentar la distribución de actividades por un país o consolidar toda la región.
 3. Analiza la matriz de carga de trabajo por responsable y el listado de vencimientos críticos para programar revisiones prioritarias.
+
+---
+
 
 ---
 
@@ -109,6 +117,9 @@ Módulo de admisión y calificación inicial de potenciales clientes corporativo
 
 ---
 
+
+---
+
 ## 04. Pipeline de Ventas & Oportunidades [roles: agente, supervisor, admin, superadmin, editor]
 Embudo visual de oportunidades de negocio estructurado en formato Kanban.
 
@@ -144,6 +155,9 @@ Embudo visual de oportunidades de negocio estructurado en formato Kanban.
 
 ---
 
+
+---
+
 ## 05. Onboarding de Clientes [roles: agente, supervisor, admin, superadmin, editor]
 Gestión y seguimiento de los hitos técnicos y legales obligatorios para dar de alta operaciones.
 
@@ -170,6 +184,9 @@ Gestión y seguimiento de los hitos técnicos y legales obligatorios para dar de
 
 ---
 
+
+---
+
 ## 06. Gestión de Negocios y Contratos [roles: agente, supervisor, admin, superadmin, editor]
 Expediente unificado de la cuenta del cliente que concentra los datos de contratos vigentes, Account Managers y bitácoras operativas.
 
@@ -193,6 +210,9 @@ Expediente unificado de la cuenta del cliente que concentra los datos de contrat
 4. Selecciona el **Tipo de Servicio Logístico** y el **Monto Mensual Estimado en la moneda local**.
 5. Activa el switch de **Renovación Automática** si aplica y define los días de anticipación de las alertas preventivas (30, 60 o 90 días).
 6. Presiona **Guardar Contrato**. El sistema creará los recordatorios automatizados.
+
+---
+
 
 ---
 
@@ -223,6 +243,9 @@ Módulo de prevención proactiva de pérdida de cuentas (Churn) y alertas automa
 
 ---
 
+
+---
+
 ## 08. WhatsApp y Omnicanalidad Comercial [roles: agente, supervisor, admin, superadmin]
 Centro integrado de comunicación omnicanal con leads y clientes corporativos.
 
@@ -239,7 +262,7 @@ Centro integrado de comunicación omnicanal con leads y clientes corporativos.
 *   **Integración de Google Meet:**
     *   *Grabación de Meet:* Genera el enlace de la reunión con consentimiento de grabación obligatorio.
     *   *Widget de Meet de Luxia:* Se superpone a la videollamada y emite beeps acústicos y alertas visuales al cumplirse el minuto 4 del límite configurado (5 minutos estándar).
-    *   *Grabadora Local HTML5 (MediaRecorder):* Si el comercial cuenta con licencia Workspace Starter, el sistema realiza la grabación directamente en el cliente HTML5 y la sube a Firebase Cloud Storage.
+    *   *Grabadora Local HTML5 (MediaRecorder):* Si el comercial cuenta con licencia Workspace Starter, el sistema realiza la grabación directamente en el cliente HTML5 y la sube a Supabase Storage.
 
 ### Guías Paso a Paso
 
@@ -257,39 +280,19 @@ Centro integrado de comunicación omnicanal con leads y clientes corporativos.
 
 ---
 
-## 09. Gestión de Tickets de Soporte (CX) [roles: agente_cx, supervisor_cx, admin, superadmin]
-Bandeja compartida para la resolución y escalamiento de reclamos operacionales.
-
-### Funcionalidades Clave y Lógica Interna
-*   **Bandeja Compartida de CX (`CxInboxView`):**
-    *   *Diseño Tri-Panel:* Izquierda (listado de tickets ordenados por SLA), Centro (línea de chat interactivo y detalle de interacciones), Derecha (información de la cuenta, tipificación y SLAs).
-    *   *Frentes de Atención:* Segmentación de colas por origen: VIP (clientes corporativos prioritarios), Final (destinatarios de envíos), Drivers (conductores de la flota regional).
-*   **Gestión de Respuestas y Notas Internas (Susurros):** Permite intercalar entre respuestas públicas (enviadas por correo/WhatsApp al creador del ticket) y susurros internos para auditorías y coordinación técnica.
-*   **SLA de Atención y Alarmas:** Relojes de control dinámicos que muestran el tiempo límite de primera respuesta (FRT) y tiempo de resolución (RT). Cambian a color rojo al estar próximos a vencer.
-*   **Sugerencias del Copiloto Luxia CX:** Lee la tipificación asignada al ticket y el historial de mensajes para sugerir un texto formal de resolución o disculpa.
-
-### Guías Paso a Paso
-
-#### Cómo gestionar y responder un ticket de soporte:
-1. Selecciona la opción de menú **Soporte y CX (Tickets)**.
-2. Haz clic en un ticket de la lista en el panel izquierdo. VIP se muestra arriba con prioridad.
-3. Observa los relojes de SLA en el panel derecho para evaluar el tiempo restante.
-4. Escribe la respuesta al cliente. Puedes presionar **✨ Copiloto CX** para insertar una sugerencia rápida.
-5. Elige si enviar como respuesta pública o guardar como nota interna.
-6. Si resolviste la consulta, cambia el estado superior a **Resuelto** y selecciona el **Motivo de Cierre** obligatorio. Haz clic en **Confirmar Cierre**.
 
 ---
 
-## 10. Auto-Capacitación y Gamificación [roles: lector, agente, agente_cx, supervisor, supervisor_cx, admin, superadmin, editor]
+## 09. Auto-Capacitación y Certificaciones [roles: lector, agente, supervisor, admin, superadmin, editor]
 Entrenamiento interactivo obligatorio para la certificación y ruteo prioritario de leads.
 
 ### Funcionalidades Clave y Lógica Interna
-*   **Certificaciones Basadas en Rol:** Evaluaciones adaptadas según el perfil de seguridad del usuario logueado (soportando los 7 roles RBAC: Lector, Agente Comercial, Supervisor Comercial, Agente CX, Supervisor CX, Admin y SuperAdmin en niveles Básico, Avanzado o Único).
+*   **Certificaciones Basadas en Rol:** Evaluaciones adaptadas según el perfil de seguridad del usuario logueado (soportando los perfiles RBAC oficiales: Lector, Agente Comercial, Supervisor Comercial, Admin y SuperAdmin en niveles Básico, Avanzado o Único).
 *   **Prioridad en Ruteo Round-Robin:** Los comerciales certificados con el distintivo de birrete (`🎓`) reciben prioridad de asignación de leads en el algoritmo rotativo regional.
 *   **Examen Bimodal:**
     *   *Teórico:* Selección múltiple. Se procesa en servidor con protección contra copias y saltos de pestaña (anti-cheat).
     *   *Práctico:* Caso operativo real de negociación o configuración. El texto es evaluado mediante el motor *Luxia Exam Engine*, que analiza la estructura, consistencia y viabilidad, emitiendo una nota de 0 a 100 y una retroalimentación detallada en Markdown.
-*   **Gamificación Activa:** La aprobación del examen de certificación otorga XP, actualiza el nivel del usuario en el Leaderboard regional y le añade la distinción de birrete (`🎓`) al lado de su nombre.
+*   **Certificación Oficial Activa:** La aprobación del examen otorga al usuario la distinción de birrete (`🎓`) al lado de su nombre, validando su idoneidad operativa en la plataforma.
 
 ### Guías Paso a Paso
 
@@ -298,11 +301,14 @@ Entrenamiento interactivo obligatorio para la certificación y ruteo prioritario
 2. Presiona el botón **Iniciar Examen de Certificación**.
 3. Responde a las preguntas del cuestionario de opción múltiple.
 4. En el área del caso práctico, redacta detenidamente tu solución detallada.
-5. Haz clic en **Enviar Examen**. El sistema procesará el envío y mostrará tu puntaje obtenido, tus XP ganados y la retroalimentación de la IA en tiempo real.
+5. Haz clic en **Enviar Examen**. El sistema procesará el envío y mostrará tu puntaje obtenido, el estado de certificación y la retroalimentación pedagógica de la IA en tiempo real.
 
 ---
 
-## 11. Panel de Supervisión y Asignaciones [roles: supervisor, supervisor_cx, admin, superadmin]
+
+---
+
+## 10. Panel de Supervisión y Asignaciones [roles: supervisor, admin, superadmin]
 Panel máster para coordinadores de equipos comerciales y de soporte.
 
 ### Funcionalidades Clave y Lógica Interna
@@ -320,13 +326,16 @@ Panel máster para coordinadores de equipos comerciales y de soporte.
 
 ---
 
-## 12. Exportación Segura de Datos [roles: supervisor, supervisor_cx, admin, superadmin]
+
+---
+
+## 11. Exportación Segura de Datos [roles: supervisor, admin, superadmin]
 Panel unificado de exportación para la descarga de información comercial del CRM.
 
 ### Funcionalidades Clave y Lógica Interna
 *   **Rate Limiting y Filtros:** Controla el número máximo de exportaciones por hora por usuario.
 *   **Detección de Exfiltración:** Si se solicita descargar un volumen de filas superior al umbral de seguridad, el sistema genera una descarga parcial y dispara una alerta silenciosa al panel de observabilidad.
-*   **Almacenamiento Temporal Seguro:** Los reportes generados se guardan en Firebase Cloud Storage y se eliminan automáticamente tras el tiempo de retención configurado.
+*   **Almacenamiento Temporal Seguro:** Los reportes generados se guardan en Supabase Storage y se eliminan automáticamente tras el tiempo de retención configurado.
 
 ### Guías Paso a Paso
 
@@ -339,7 +348,10 @@ Panel unificado de exportación para la descarga de información comercial del C
 
 ---
 
-## 13. Configuración Comercial (Pipeline e Hitos) [roles: admin, superadmin]
+
+---
+
+## 12. Configuración Comercial (Pipeline e Hitos) [roles: admin, superadmin]
 Gobernanza de embudos de ventas y el checklist estándar de activación.
 
 ### Funcionalidades Clave y Lógica Interna
@@ -369,41 +381,17 @@ Gobernanza de embudos de ventas y el checklist estándar de activación.
 
 ---
 
-## 14. Configuración de CX (SLAs y Categorías) [roles: admin, superadmin]
-Administración del sistema de tickets y de los frentes de soporte.
-
-### Funcionalidades Clave y Lógica Interna
-*   **Tiempos de SLAs:** Configuración del FRT (First Response Time) y RT (Resolution Time) en minutos para cada nivel de urgencia (baja, media, alta, crítica).
-*   **Multiplicadores de SLA VIP:** Parámetro que reduce a la mitad (ej: factor 0.5x) los tiempos de respuesta exigidos para clientes etiquetados como VIP.
-*   **Colas de Routing:** Rutas y reglas de asignación automática de tickets entrantes a los diferentes frentes.
-*   **Configuración de Tipificaciones:** Árbol de categorías de tickets de hasta 3 niveles (ej: *Reclamo > Retraso de Colecta > Sin Flota*) con priorización sugerida automática.
-*   **Macros and FAQs:** Respuestas rápidas de CX y base de artículos del Help Center.
-*   **Encuestas CSAT:** Plantilla de correo SMTP que se envía automáticamente al resolverse un ticket para recopilar la encuesta CSAT.
-
-### Guías Paso a Paso
-
-#### Cómo configurar SLAs y Prioridades VIP:
-1. Ve a **Configuración > Soporte y CX > Tiempos de SLAs**.
-2. Edita los minutos de primera respuesta y resolución para las urgencias crítica, alta, media y baja.
-3. En la sección **Multiplicador VIP**, define el factor corrector de tiempos (ej: `0.5` para exigir la mitad de tiempo).
-4. Haz clic en **Guardar Configuración**.
-
-#### Cómo crear un Artículo de FAQ para el Help Center:
-1. Ve a **Configuración > Soporte y CX > Base de FAQs**.
-2. Haz clic en **+ Crear FAQ**.
-3. Selecciona la Categoría, ingresa un Título descriptivo y redacta el cuerpo de respuesta en Markdown.
-4. Haz clic en **Guardar y Publicar**. Estará disponible de inmediato en la bandeja tri-panel de CX y en el Help Center.
 
 ---
 
-## 15. Configuración de Personas y Equipos [roles: admin, superadmin]
+## 13. Configuración de Personas y Equipos [roles: admin, superadmin]
 Gestión de usuarios del CRM, invitaciones y equipos.
 
 ### Funcionalidades Clave y Lógica Interna
 *   **Gestión de Invitaciones por Correo (SMTP Queue):**
     *   *Plantilla de Invitación:* Permite configurar el asunto y cuerpo de la invitación por correo. Soporta las variables dinámicas `{{email}}`, `{{rol}}` y `{{equipo}}`.
     *   *Cola de Correos (`cola_correos`):* Panel de observabilidad técnica que muestra los correos pendientes de envío, en proceso, enviados o fallidos, con detalle de fecha, hora y logs de error SMTP en real.
-*   **Estructura de Equipos:** Definición de divisiones de trabajo operativas y comerciales (Adquisición, Retención, CX) para organización territorial y asignación de cartera.
+*   **Estructura de Equipos:** Definición de divisiones de trabajo operativas y comerciales (Adquisición, Retención, Operaciones) para organización territorial y asignación de cartera.
 *   **Regla de Gobernanza de Equipos para Administradores:** Por arquitectura de seguridad y permisos globales, los usuarios con rol **Admin** o **SuperAdmin** pertenecen de manera obligatoria y exclusiva al equipo **Global**. Al invitar o modificar el rol de un usuario a Admin o SuperAdmin, el sistema fija automáticamente su equipo en *Global* e inhabilita su reasignación a equipos específicos en la consola de usuarios.
 
 ### Guías Paso a Paso
@@ -417,7 +405,10 @@ Gestión de usuarios del CRM, invitaciones y equipos.
 
 ---
 
-## 16. Configuración de Datos (Campos y Form) [roles: admin, superadmin]
+
+---
+
+## 14. Configuración de Datos (Campos y Form) [roles: admin, superadmin]
 Constructor no-code de formularios dinámicos, Metrics Studio e Inbound Leads.
 
 ### Funcionalidades Clave y Lógica Interna
@@ -452,12 +443,15 @@ Constructor no-code de formularios dinámicos, Metrics Studio e Inbound Leads.
 
 ---
 
-## 17. Configuración de Seguridad y RBAC [roles: superadmin]
+
+---
+
+## 15. Configuración de Seguridad y RBAC [roles: superadmin]
 Administración avanzada de privilegios de seguridad y políticas de sesión.
 
 ### Funcionalidades Clave y Lógica Interna
 *   **Matriz de Permisos RBAC:** Tabla interactiva que asocia roles (Lector, Agente, Supervisor, Admin, SuperAdmin) con acciones atómicas (alta de clientes, exportación de bases de datos, anulación de notas, configuración de SLAs y **configuración de modelos de IA**). Cada permiso es representado por un checkbox.
-*   **Matriz de Ámbitos de Datos (Data Scopes):** Panel que asocia cada rol del sistema con el nivel de contención visual para las entidades críticas (`leads`, `oportunidades`, `clientes`, `tablero`, `cx_inbox`, `alertas`, `capacitacion`, `consumo_ia`). Permite conmutar dinámicamente entre los niveles de alcance:
+*   **Matriz de Ámbitos de Datos (Data Scopes):** Panel que asocia cada rol del sistema con el nivel de contención visual para las entidades críticas (`leads`, `oportunidades`, `clientes`, `tablero`, `alertas`, `capacitacion`, `consumo_ia`). Permite conmutar dinámicamente entre los niveles de alcance:
     *   `ALL`: Acceso completo a toda la organización.
     *   `TEAM`: Limitación automática a registros del mismo equipo.
     *   `OWN`: Restricción a registros asignados o creados personalmente.
@@ -482,7 +476,10 @@ Administración avanzada de privilegios de seguridad y políticas de sesión.
 
 ---
 
-## 18. Configuración de IA y FinOps (Presupuesto) [roles: superadmin]
+
+---
+
+## 16. Configuración de IA y FinOps (Presupuesto) [roles: superadmin]
 ### Funcionalidades Clave y Lógica Interna
 *   **Luxia Máster Prompts Config:** Permite editar los System Prompts, temperatura del modelo y número de tokens de salida de los distintos agentes IA integrados en el CRM (scorer, risk, triage, metings, etc.) incluyendo el nuevo **🤖 Auditor KB** para propuestas de manuales. Permite revertir cambios mediante el historial de versiones guardadas.
 *   **Gestión RAG y Propuestas de Conocimiento:**
@@ -493,7 +490,7 @@ Administración avanzada de privilegios de seguridad y políticas de sesión.
     *   *Consumo Acumulado:* Gráficos que muestran el acumulado del mes contra la meta proyectada.
     *   *Circuit Breaker (Auto-shutoff):* Switch que, al activarse, deshabilita en vivo todas las llamadas a las APIs de IA en el CRM al alcanzar el 100% del presupuesto para evitar sobrecostos inesperados.
     *   *Límites por Rol:* Permite asignar topes de llamadas de IA por hora por cada tipo de rol de usuario.
-*   **Desactivación Global de Integraciones:** Switch de desconexión de emergencia que pausa integraciones externas con Slack y WhatsApp en caso de incidencias de seguridad.
+*   **Desactivación Global de Integraciones:** Switch de desconexión de emergencia que pausa integraciones externas como WhatsApp en caso de incidencias de seguridad.
 
 ### Guías Paso a Paso
 
@@ -518,7 +515,10 @@ Administración avanzada de privilegios de seguridad y políticas de sesión.
 
 ---
 
-## 19. Centro de Observabilidad IT [roles: superadmin]
+
+---
+
+## 17. Centro de Observabilidad IT [roles: superadmin]
 Panel máster de monitoreo de salud del sistema, bases de datos y red cloud.
 
 ### Funcionalidades Clave y Lógica Interna

@@ -127,10 +127,8 @@ export function ExportDrawer({ show, onClose, defaultEntity = 'leads' }) {
         });
         rows = response.data || [];
       } catch (backendErr) {
-        console.warn('[ExportDrawer] Fallback a query directa:', backendErr.message);
-        const { data, error } = await supabase.from(entity).select('*');
-        if (error) throw error;
-        rows = data || [];
+        console.error('[ExportDrawer] Error en servicio de exportación backend:', backendErr.message);
+        throw new Error('El servicio de exportación seguro no está disponible temporalmente. Por cumplimiento y auditoría, la exportación directa está deshabilitada.');
       }
 
       setProgress(75);

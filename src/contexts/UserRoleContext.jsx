@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { normalizarEquipo } from '../lib/utils';
 
 const UserRoleContext = createContext(null);
 
@@ -82,10 +83,10 @@ export function UserRoleProvider({ user, children }) {
       }
       setLoading(true);
       try {
-        // Consultar el perfil del usuario desde PostgreSQL en Supabase
+        // Consultar el perfil del usuario desde PostgreSQL en Supabase con proyección explícita
         const { data: uData, error } = await supabase
           .from('usuarios')
-          .select('*')
+          .select('id, email, nombre, rol, equipo, pais, activo, estado_presencia, presencia, capacitacion, gmail_sync')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -181,11 +182,6 @@ export function UserRoleProvider({ user, children }) {
     return fallback.includes(role);
   }, [role, matrix]);
 
-  const normalizarEquipo = useCallback((teamStr) => {
-    if (!teamStr) return '';
-    return teamStr.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
-  }, []);
-
   const getDataScope = useCallback((entityKey) => {
     if (role === 'superadmin' || role === 'admin') return 'ALL';
 
@@ -235,7 +231,8 @@ export function UserRoleProvider({ user, children }) {
     isLector: role === 'lector',
     hasPermission,
     canView,
-    getDataScope
+    getDataScope,
+    normalizarEquipo
   }), [role, profile, loading, userTeam, userCountry, hasPermission, canView, getDataScope]);
 
   return (

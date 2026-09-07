@@ -42,9 +42,9 @@ async function dispatchWebhookEvent({ eventType, payload, supabase }) {
 
     const serializedPayload = JSON.stringify(eventEnvelope);
 
-    // 2. Enviar peticiones HTTP a cada suscriptor de forma asíncrona
-    matchingSubs.forEach(async (sub) => {
-      try {
+    // 2. Enviar peticiones HTTP a cada suscriptor de forma concurrente y controlada
+    const results = await Promise.allSettled(
+      matchingSubs.map(async (sub) => {
         const headers = {
           'Content-Type': 'application/json',
           'User-Agent': 'Luxia-Webhook-Dispatcher/1.0',
@@ -61,22 +61,32 @@ async function dispatchWebhookEvent({ eventType, payload, supabase }) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-        const response = await fetch(sub.url, {
-          method: 'POST',
-          headers,
-          body: serializedPayload,
-          signal: controller.signal
-        });
+        try {
+          const response = await fetch(sub.url, {
+            method: 'POST',
+            headers,
+            body: serializedPayload,
+            signal: controller.signal
+          });
 
-        clearTimeout(timeoutId);
+          clearTimeout(timeoutId);
 
-        if (!response.ok) {
-          console.warn(`[Webhook Dispatcher] Suscripción ${sub.id} respondió con HTTP ${response.status} para evento ${eventType}`);
+          if (!response.ok) {
+            console.warn(`[Webhook Dispatcher] Suscripción ${sub.id} respondió con HTTP ${response.status} para evento ${eventType}`);
+          }
+          return { subId: sub.id, status: response.status };
+        } catch (dispErr) {
+          clearTimeout(timeoutId);
+          console.error(`[Webhook Dispatcher Error] Error enviando a ${sub.url}:`, dispErr.message);
+          throw { subId: sub.id, error: dispErr.message };
         }
-      } catch (dispErr) {
-        console.error(`[Webhook Dispatcher Error] Error enviando a ${sub.url}:`, dispErr.message);
-      }
-    });
+      })
+    );
+
+    const failed = results.filter(r => r.status === 'rejected');
+    if (failed.length > 0) {
+      console.warn(`[Webhook Dispatcher] ${failed.length} de ${matchingSubs.length} webhooks fallaron para evento ${eventType}`);
+    }
   } catch (err) {
     console.error('[Webhook Dispatcher Critical Error]', err);
   }

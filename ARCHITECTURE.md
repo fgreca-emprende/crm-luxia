@@ -35,8 +35,8 @@ Toda la persistencia de datos opera sobre **PostgreSQL**:
 ### 1.5 Backend Worker & Ejecutor Asíncrono (`server/`)
 - Servidor dedicado en **Node.js + Express**:
   - **Endpoints API REST (`/api/v1`)**: Autenticación mediante cabecera `x-api-key` y control de cuotas para integraciones externas.
-  - **Crons y Sincronización en Segundo Plano**: Cálculo periódico de métricas, análisis de retención, health scores, alertas de SLA y telemetría del sistema.
-  - **Webhooks Entrantes y Salientes**: Recepción de eventos de WhatsApp y despacho de notificaciones a Slack/endpoints de terceros con firmas criptográficas HMAC.
+  - **Crons y Sincronización en Segundo Plano**: Cálculo periódico de métricas, análisis de retención, health scores, alertas de contratos y telemetría del sistema.
+  - **Webhooks Entrantes y Salientes**: Recepción de eventos de WhatsApp y despacho de notificaciones a endpoints de terceros con firmas criptográficas HMAC.
 
 ---
 
@@ -45,7 +45,7 @@ Toda la persistencia de datos opera sobre **PostgreSQL**:
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
 │                              FRONTEND (React 19 + Vite)                                 │
-│  [ Apple Command SuperBar: Inteligencia | Comercial ▾ | Operaciones ▾ | CX | Alertas ]  │
+│  [ Apple Command SuperBar: Inteligencia | Comercial ▾ | Operaciones ▾ | Contratos | Alertas ]  │
 └───────────────────────────┬─────────────────────────────────┬───────────────────────────┘
                             │ (Supabase Client / JWT)         │ (HTTP REST / API Keys)
                             ▼                                 ▼
@@ -53,7 +53,7 @@ Toda la persistencia de datos opera sobre **PostgreSQL**:
 │        SUPABASE (PostgreSQL + RLS)           │   │    BACKEND WORKER (Node.js/Express)  │
 │  - Tablas: clientes, leads, oportunidades,   │◀──┤  - Cron Jobs & Sincronizaciones      │
 │    contratos, actividades, usuarios, etc.     │   │  - Invocaciones a Google Gemini      │
-│  - Políticas RLS por Rol y Equipo            │   │  - Webhooks WhatsApp / Slack         │
+│  - Políticas RLS por Rol y Equipo            │   │  - Webhooks WhatsApp / HTTP Outbound │
 │  - Supabase Auth (JWT & Sesiones)            │   │  - API Gateway Inbound / Outbound    │
 └──────────────────────────────────────────────┘   └──────────────────┬───────────────────┘
                                                                       │ (AI Prompts & RAG)

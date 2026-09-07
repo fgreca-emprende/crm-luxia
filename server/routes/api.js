@@ -196,11 +196,12 @@ router.get('/v1/clientes/:id', validateApiKey, async (req, res) => {
   const { id } = req.params;
 
   try {
+    // SEC-06 FIX: Limitar proyección para evitar fuga de campos internos sensibles (health_score, bitacora, RAG)
     const { data: cliente, error } = await supabase
       .from('clientes')
-      .select('*')
+      .select('id, nombre_empresa, razon_social, cuit_rut_rfc, pais, estado, industria, sitio_web, tamanio_empresa, observaciones, updated_at, created_at')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (error || !cliente) {
       return res.status(404).json({ error: `Cliente con ID ${id} no encontrado.` });
@@ -230,7 +231,8 @@ router.post('/v1/clientes', validateApiKey, async (req, res) => {
   const safeEmpresa = sanitizeUserInput(nombreEmpresa, 200);
   const safePais = sanitizeUserInput(pais || 'PE', 5).toUpperCase();
   const safeContext = sanitizeContext(camposDinamicos || {}, 2000);
-  const clienteId = req.body.id || `client_${crypto.randomUUID ? crypto.randomUUID().split('-')[0] : Date.now().toString(36)}`;
+  // SEC-11 FIX: El ID siempre se genera en servidor — nunca se acepta del cliente externo
+  const clienteId = `client_${crypto.randomUUID ? crypto.randomUUID().split('-')[0] : Date.now().toString(36)}`;
 
   try {
     const { data: nuevoCliente, error } = await supabase

@@ -166,3 +166,100 @@ paths:
           description: Faltan campos requeridos o malformados.
         '403':
           description: Prohibido. El API Key no cuenta con privilegios de escritura ('write').
+
+  /copilot:
+    post:
+      summary: Copiloto de IA y dictado por voz (Luxia Copilot)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                clienteId:
+                  type: string
+      responses:
+        '200':
+          description: Respuesta generada por Luxia Copilot.
+        '401':
+          description: No autenticado.
+
+  /evaluar-examen:
+    post:
+      summary: Calificación pedagógica automatizada de exámenes de capacitación
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rol, dificultad]
+              properties:
+                rol:
+                  type: string
+                dificultad:
+                  type: string
+                respuestasTeorico:
+                  type: array
+                respuestaPractico:
+                  type: string
+      responses:
+        '200':
+          description: Resultado de evaluación con score teórico, práctico y global.
+        '429':
+          description: Límite diario de intentos de examen superado.
+
+  /exportar-datos:
+    post:
+      summary: Exportación auditada de registros con Data Scopes inmutables
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entidad]
+              properties:
+                entidad:
+                  type: string
+                  enum: [leads, clientes, oportunidades]
+                filtros:
+                  type: object
+      responses:
+        '200':
+          description: Datos auditados exportables en JSON/CSV.
+        '403':
+          description: Permisos insuficientes para exportar la entidad solicitada.
+
+  /provision-user:
+    post:
+      summary: Aprovisionamiento de usuario y sincronización de rol
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                rol:
+                  type: string
+                equipo:
+                  type: string
+      responses:
+        '200':
+          description: Usuario aprovisionado o perfil sincronizado exitosamente.

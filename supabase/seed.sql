@@ -8,7 +8,9 @@ INSERT INTO public.config_ia_modelos (id, nombre, proveedor, estado, es_default,
 VALUES
   ('gemini-3.5-flash-lite', 'Gemini 3.5 Flash Lite', 'Google Gemini', 'activo', true, 'Ultrarrápido, ligero y de respuesta instantánea optimizado para tareas de alta frecuencia y soporte técnico.', 0.075, 0.30, 8192, 1048576),
   ('gemini-3.5-flash', 'Gemini 3.5 Flash', 'Google Gemini', 'activo', false, 'Modelo principal multitarea de velocidad y equilibrio ideal para agentes de producción.', 0.10, 0.40, 8192, 1048576),
-  ('gemini-3.6-flash', 'Gemini 3.6 Flash', 'Google Gemini', 'activo', false, 'Modelo de última generación con razonamiento avanzado, alta velocidad y capacidad multimodal profunda.', 0.15, 0.60, 8192, 2097152)
+  ('gemini-3.6-flash', 'Gemini 3.6 Flash', 'Google Gemini', 'activo', false, 'Modelo con razonamiento avanzado, alta velocidad y capacidad multimodal equilibrada.', 0.15, 0.60, 8192, 2097152),
+  ('gemini-3.7-flash', 'Gemini 3.7 Flash', 'Google Gemini', 'activo', false, 'Razonamiento híbrido de alta precisión para diagnóstico comercial y scoring complejo.', 0.20, 0.80, 8192, 2097152),
+  ('gemini-3.8-flash', 'Gemini 3.8 Flash', 'Google Gemini', 'activo', false, 'Modelo de frontera para workflows agénticos autónomos y análisis comercial profundo.', 0.25, 1.00, 8192, 2097152)
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. SERVICIOS LOGÍSTICOS ESTÁNDAR

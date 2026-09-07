@@ -1,6 +1,6 @@
 # CRM Enterprise Luxia
 
-Sistema de Gestión de Clientes, Pipeline Comercial, Operaciones y Mesa de Ayuda (CX) de nivel empresarial, equipado con Inteligencia Artificial analítica (**Luxia IA**) y una experiencia de usuario de alta gama (**Apple Command SuperBar**).
+Sistema de Gestión de Clientes, Pipeline Comercial, Operaciones y Contratos de nivel empresarial, equipado con Inteligencia Artificial analítica (**Luxia IA**) y una experiencia de usuario de alta gama (**Apple Command SuperBar**).
 
 ---
 
@@ -10,7 +10,7 @@ Sistema de Gestión de Clientes, Pipeline Comercial, Operaciones y Mesa de Ayuda
 - **Backend & Worker:** API REST y ejecutor de tareas asíncronas / cron jobs en **Node.js + Express** (Ubicado en `server/`).
 - **Base de Datos & Auth:** **PostgreSQL en Supabase** con seguridad declarativa mediante **Row-Level Security (RLS)** y autenticación JWT.
 - **Motor de Inteligencia Artificial:** **Luxia IA** potenciado por Google Gemini (Health Score predictivo, resúmenes automáticos, auditoría de calidad y copiloto de ventas).
-- **Backend Worker Local & Webhooks**: Node.js + Express para tareas en segundo plano, sincronización de tokens e integraciones omnicanal (WhatsApp y Slack).
+- **Backend Worker Local & Webhooks**: Node.js + Express para tareas en segundo plano, sincronización de tokens e integraciones omnicanal (WhatsApp Business Cloud API).
 - **Control de Acceso Basado en Roles (RBAC)**: Matriz de permisos dinámica (`config_permisos`) con scopes configurables (`ALL`, `TEAM`, `OWN`) por rol.
 - **Capacitación Comercial Automatizada (Luxia Exam)**: Módulo interactivo con calificación automática de casos prácticos por IA.
 - **Metrics Studio & KPIs**: Constructor de gráficos y dashboards de analítica de ventas y retención.
@@ -26,7 +26,7 @@ Sistema de Gestión de Clientes, Pipeline Comercial, Operaciones y Mesa de Ayuda
 3. **🏢 Gestión de Cuentas**:
    - **Clientes**: Ficha 360° con Health Score, timeline de interacciones y gestión de adendas.
    - **Contratos**: Control de vigencia, renovaciones y adjuntos contractuales.
-4. **💬 Soporte & CX**: Consola omnicanal para gestión de tickets y mensajería directa por WhatsApp.
+4. **💬 Comunicación Omnicanal**: Consola de mensajería directa y plantillas oficiales por WhatsApp Business Cloud API.
 5. **🎓 Capacitación**: Módulo de autoevaluación comercial y certificación interna.
 6. **⚙️ Centro de Control (Admin)**: Configuración de permisos RBAC, catálogo de servicios, modelos de IA, prompts de Luxia y observabilidad del sistema.
 

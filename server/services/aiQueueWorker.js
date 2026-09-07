@@ -12,26 +12,36 @@ async function processAiQueue(supabase) {
   isWorkerRunning = true;
 
   try {
-    // 1. Obtener tareas pendientes con límite controlado
-    const { data: tareas, error } = await supabase
-      .from('cola_tareas_ia')
-      .select('*')
-      .eq('estado', 'pendiente')
-      .order('created_at', { ascending: true })
-      .limit(5);
+    // SCALE-01 FIX: Dequeue atómico con SKIP LOCKED para prevenir condiciones de carrera en multi-instancia
+    let tareas = [];
+    const { data: rpcTareas, error: rpcError } = await supabase.rpc('dequeue_ai_tasks', { p_limit: 5 });
 
-    if (error || !tareas || tareas.length === 0) {
+    if (!rpcError && Array.isArray(rpcTareas)) {
+      tareas = rpcTareas;
+    } else {
+      // Fallback si RPC no responde
+      const { data: fallbackTareas } = await supabase
+        .from('cola_tareas_ia')
+        .select('*')
+        .eq('estado', 'pendiente')
+        .order('created_at', { ascending: true })
+        .limit(5);
+
+      tareas = fallbackTareas || [];
+      for (const t of tareas) {
+        await supabase
+          .from('cola_tareas_ia')
+          .update({ estado: 'procesando', intentos: (t.intentos || 0) + 1, updated_at: new Date().toISOString() })
+          .eq('id', t.id);
+      }
+    }
+
+    if (!tareas || tareas.length === 0) {
       isWorkerRunning = false;
       return;
     }
 
     for (const tarea of tareas) {
-      // Marcar como procesando
-      await supabase
-        .from('cola_tareas_ia')
-        .update({ estado: 'procesando', intentos: (tarea.intentos || 0) + 1, updated_at: new Date().toISOString() })
-        .eq('id', tarea.id);
-
       try {
         const aiRes = await generateLuxiaContent({
           agenteId: tarea.agente_id || 'luxia_lead_scorer',

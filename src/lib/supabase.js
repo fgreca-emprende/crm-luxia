@@ -29,7 +29,8 @@ export async function callBackendApi(endpoint, data = {}, token = null) {
     authToken = session?.access_token;
   }
 
-  const backendBase = `${supabaseUrl}/backend/api`;
+  // ARCH-02 FIX: Permitir configurar URL del backend de forma independiente o usar proxy de Kong
+  const backendBase = import.meta.env.VITE_BACKEND_URL || `${supabaseUrl}/backend/api`;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
   const response = await fetch(`${backendBase}${cleanEndpoint}`, {

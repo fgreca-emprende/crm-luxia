@@ -89,7 +89,11 @@ export function useLeadsPaginados(pageSize = 25, selectedCountry = '', searchTer
 
       let query = supabase
         .from('leads')
-        .select('*', { count: 'exact' });
+        .select(
+          'id, nombre_empresa, nombre_contacto, correo, telefono, pais, estado, ' +
+          'score_calculado, calificacion_ia, asignado_a, asignado_id, origen, notas, cuit_rut_rfc, industria, sitio_web, campos_dinamicos, created_at, updated_at',
+          { count: 'exact' }
+        );
 
       if (selectedCountry) {
         query = query.eq('pais', selectedCountry);

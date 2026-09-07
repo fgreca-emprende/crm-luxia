@@ -79,7 +79,11 @@ export function useClientesPaginados(pageSize = 25, selectedCountry = '', search
 
       let query = supabase
         .from('clientes')
-        .select('*', { count: 'exact' });
+        .select(
+          'id, nombre_empresa, cuit_rut_rfc, pais, estado, comercial_email, comercial_id, ' +
+          'tier_cuenta, industria, sitio_web, tamanio_empresa, health_score, observaciones, updated_at, created_at',
+          { count: 'exact' }
+        );
 
       if (clientScope === 'TEAM' && teamEmails && teamEmails.length > 0) {
         query = query.in('comercial_email', teamEmails);

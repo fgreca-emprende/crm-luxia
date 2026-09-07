@@ -73,7 +73,6 @@ export function DashboardKPIs({ selectedCountry, user }) {
               temp[email] = {
                 email: email,
                 nombre: u.nombre || email,
-                gamificacion: u.gamificacion,
                 capacitacion: u.capacitacion,
                 equipo: u.equipo,
                 hasRealName: !!hasRealName
@@ -103,12 +102,6 @@ export function DashboardKPIs({ selectedCountry, user }) {
       if (normalizedTeam === 'retencion') setDashboardView('Retencion');
     }
   }, [isRestricted, normalizedTeam]);
-
-  useEffect(() => {
-    if (activeTab !== 'logros' && dashboardView === 'Soporte') {
-      setDashboardView('Global');
-    }
-  }, [activeTab, dashboardView]);
 
   useEffect(() => {
     const fetchConfigAndUser = async () => {
@@ -142,7 +135,7 @@ export function DashboardKPIs({ selectedCountry, user }) {
   });
   const [historyData, setHistoryData] = useState([]);
   
-  // --- Estados Gamificación & Finanzas ---
+  // --- Estados de Finanzas y Revenue ---
   const [financeStats, setFinanceStats] = useState({ mrr: {}, risk: {}, churn: {}, estimatedLoss30Days: 0 });
   const [exchangeRates, setExchangeRates] = useState(null);
 
@@ -447,11 +440,8 @@ export function DashboardKPIs({ selectedCountry, user }) {
     try {
       const meta = clientMetadataRef.current;
 
-      // [PERF-01 FIX] Proyección optimizada de campos en contratos
-      let qContratos = supabase.from('contratos').select('id, cliente_id, monto, moneda, es_contrato_vigente, fecha_fin, fecha_vencimiento, comercial_email');
-      if (oportunidadesScope === 'OWN') {
-        qContratos = qContratos.eq('comercial_email', user.email);
-      }
+      // [PERF-01 FIX] Proyección de columnas existentes en tabla contratos
+      let qContratos = supabase.from('contratos').select('id, cliente_id, monto, moneda, es_contrato_vigente, fecha_vencimiento, estado_sla');
 
       const { data: contratosData, error: cErr } = await qContratos;
       if (cErr) throw cErr;
@@ -474,20 +464,22 @@ export function DashboardKPIs({ selectedCountry, user }) {
       const SixtyDaysMs = 60 * 24 * 60 * 60 * 1000;
 
       (contratosData || []).forEach(d => {
+        const clientMeta = meta[d.cliente_id] || {};
+        const comercialEmail = clientMeta.comercial_email || clientMeta.comercialEmail || '';
+
         if (oportunidadesScope === 'NONE') return;
         if (oportunidadesScope === 'OWN') {
-          const isSelf = d.comercial_email && d.comercial_email.toLowerCase().trim() === user.email?.toLowerCase().trim();
+          const isSelf = comercialEmail && comercialEmail.toLowerCase().trim() === user.email?.toLowerCase().trim();
           if (!isSelf) return;
         } else if (oportunidadesScope === 'TEAM') {
-          const isSelf = d.comercial_email && d.comercial_email.toLowerCase().trim() === user.email?.toLowerCase().trim();
+          const isSelf = comercialEmail && comercialEmail.toLowerCase().trim() === user.email?.toLowerCase().trim();
           if (!isSelf) {
-            const comercialUser = comerciales.find(u => u.email?.toLowerCase().trim() === d.comercial_email?.toLowerCase().trim());
+            const comercialUser = comerciales.find(u => u.email?.toLowerCase().trim() === comercialEmail.toLowerCase().trim());
             if (!comercialUser || normalizarEquipo(comercialUser.equipo) !== normalizedTeam) return;
           }
         }
 
-        if ((isAdmin || role === 'supervisor') && selectedComercial && d.comercial_email !== selectedComercial) return;
-        const clientMeta = meta[d.cliente_id] || {};
+        if ((isAdmin || role === 'supervisor') && selectedComercial && comercialEmail !== selectedComercial) return;
         const clientCountry = clientMeta.pais || d.pais || '';
         const clientState = clientMeta.estado || '';
         const clientRiesgo = clientMeta.riesgo || 'Green';
@@ -529,8 +521,9 @@ export function DashboardKPIs({ selectedCountry, user }) {
             lossUsdSum += contratoMontoUsd;
           }
 
-          if (d.fecha_fin) {
-            const vencDate = new Date(d.fecha_fin).getTime();
+          const fechaVenc = d.fecha_vencimiento;
+          if (fechaVenc) {
+            const vencDate = new Date(fechaVenc).getTime();
             if (vencDate >= nowTs && vencDate <= nowTs + SixtyDaysMs) {
               renewals60Count++;
               renewals60Usd += contratoMontoUsd;

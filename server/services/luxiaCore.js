@@ -108,6 +108,16 @@ async function generateLuxiaContent({ agenteId, prompt, userEmail = "System (Aut
     };
   } catch (err) {
     console.error(`[LUXIA IA] Error ejecutando agente ${agenteId}:`, err);
+    try {
+      if (supabase) {
+        await supabase.from('logs_sistema').insert({
+          nivel: 'ERROR',
+          accion: `ia_generacion_${agenteId}`,
+          descripcion: `Fallo en invocación de Gemini API (${err.message})`,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (_) { /* bypass silent logging failure */ }
     return {
       success: false,
       error: err.message

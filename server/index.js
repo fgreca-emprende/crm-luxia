@@ -56,8 +56,13 @@ const ALLOWED_ORIGINS = (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:5
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permitir requests sin origin (Postman, curl, server-to-server)
-    if (!origin) return callback(null, true);
+    // SEC-05: En producción estricta, requests de navegador deben incluir origin válido
+    if (!origin) {
+      if (process.env.NODE_ENV === 'production' && process.env.STRICT_CORS === 'true') {
+        return callback(new Error('CORS Policy: Requests sin cabecera Origin no permitidos en producción.'));
+      }
+      return callback(null, true);
+    }
     if (ALLOWED_ORIGINS.includes(origin)) {
       return callback(null, true);
     }

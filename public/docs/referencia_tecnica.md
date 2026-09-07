@@ -1,307 +1,173 @@
 # Manual de Referencia Técnica y Arquitectura del Sistema
 ### CRM-Luxia · Especificación de Software & Protocolos Regionales
 
-Este documento es la referencia técnica maestra que detalla los principios de diseño, la topología serverless, la lógica de FinOps, los guardarraíles de seguridad y los flujos de orquestación de todos los módulos que integran el ecosistema **CRM-Luxia**.
+Este documento es la referencia técnica maestra que detalla los principios de diseño, la topología de servicios, la persistencia en PostgreSQL con Supabase, los guardarraíles de seguridad declarativa (RLS) y los flujos de orquestación de todos los módulos que integran el ecosistema **CRM-Luxia**.
 
 ---
 
-## 01. Arquitectura General y Topología Serverless [roles: admin, superadmin]
-El CRM-Luxia está implementado sobre una topología serverless orientada a eventos, diseñada para escalar de forma elástica minimizando costos fijos y latencias regionales en LATAM.
+## 01. Arquitectura General y Topología de Servicios [roles: admin, superadmin]
+El CRM-Luxia está implementado sobre una arquitectura moderna desacoplada en dos capas principales: una Single Page Application (SPA) client-side y un backend worker dedicado, operando sobre un clúster on-premise de PostgreSQL gestionado mediante Supabase.
 
 ```mermaid
 graph TD
-    A[Client SPA: React + Vite] -->|HTTPS Requests| B[Firebase Hosting]
-    A -->|Authentication JWT| C[Firebase Auth & RBAC Claims]
-    A -->|Realtime onSnapshot| D[Cloud Firestore]
-    A -->|API Calls / REST / Webhooks| E[Cloud Functions Gen 2 - Node.js]
-    E -->|Tokens/Pricing Tracking| F[Firestore: logs_ia_consumo]
-    E -->|Generative Call| G[Google Gemini API]
-    E -->|Secure Storage / Audio Meet| H[Firebase Cloud Storage]
+    A[Client SPA: React 19 + Vite] -->|HTTPS REST / JWT| B[Supabase On-Premise: Kong Gateway]
+    B -->|Stateless Auth JWT| C[Supabase Auth Engine]
+    B -->|PostgREST + RLS| D[PostgreSQL 15 Database]
+    A -->|API Calls / REST / Webhooks| E[Backend Worker: Node.js + Express]
+    E -->|Tokens/Cost Tracking| D
+    E -->|Generative Call / Multi-Model| G[Google Gemini 3.5 / Claude / OpenAI]
+    E -->|Secure Storage S3 Compatible| H[Supabase Storage Engine]
     E -->|Omnichannel Hub| I[WhatsApp Business Cloud API]
-    E -->|Alerting / DM Hub| J[Slack Workspace API]
 ```
 
 ### Detalle de Componentes
-1.  **Client SPA (Single Page Application):** React + Vite. Utiliza estilos de Bootstrap 5. Implementa el hook centralizado `useUserRole` para la evaluación client-side de permisos y vistas selectivas.
-2.  **Firebase Hosting:** Distribución global de recursos estáticos del frontend (HTML, JS, CSS y archivos de documentación `.md` en `/docs`).
-3.  **Firebase Authentication:** Autenticación unificada mediante JSON Web Tokens (JWT).
-    *   *Custom Claims:* Inyección del rol del usuario (`lector`, `agente`, `agente_cx`, `supervisor`, `supervisor_cx`, `admin`, `superadmin`) directamente en los metadatos del token para validación en reglas de seguridad de Firestore y Storage.
-4.  **Cloud Firestore (NoSQL):** Almacenamiento persistente en tiempo real. Configurado con persistencia local IndexedDB (`enableIndexedDbPersistence`) para permitir navegación y visualización offline en zonas sin cobertura de red.
-5.  **Cloud Functions Gen 2 (Node.js/TypeScript):** Funciones callable y endpoints HTTPS. Configurada una escala mínima de instancias virtuales activas para mitigar el efecto de arranque en frío (Cold Start) en endpoints críticos como la recepción de webhooks de WhatsApp.
-6.  **Firebase Cloud Storage:** Almacén seguro para archivos adjuntos de clientes, bitácoras de importaciones masivas y ficheros de audio `.mp3` generados por el grabador local de Google Meet.
+1. **Client SPA (Single Page Application):** React 19 + Vite. Utiliza Sistema de Diseño Apple Liquid Glass (Vanilla CSS). Implementa el contexto centralizado `UserRoleContext` para la evaluación client-side de permisos, scopes de datos (`ALL`, `TEAM`, `OWN`) y vistas selectivas.
+2. **Kong API Gateway (Supabase):** Ruteo centralizado de peticiones REST bajo puerto 8000 (`http://192.168.0.70:8000`), resolviendo la autenticación y reenvío a PostgREST.
+3. **Supabase Authentication:** Autenticación unificada mediante JSON Web Tokens (JWT) firmados criptográficamente. Inyecta el identificador único (`auth.uid()`) y valida la sesión activa del operador.
+4. **PostgreSQL 15 con Row-Level Security (RLS):** Capa de persistencia relacional estricta. Toda sentencia SQL está protegida por políticas RLS activas en tablas sensibles (`usuarios`, `clientes`, `oportunidades`, `contratos`, `leads`, `api_keys`, `logs_sistema`, `logs_ia_consumo`, `incoming_api_logs`).
+5. **Backend Worker & API Gateway (Node.js/Express en puerto 4000):** Microservicio dedicado para tareas asíncronas, webhooks entrantes, cron jobs de mantenimiento, sincronización de health score y llamadas seguras a modelos de IA sin exponer API Keys en el cliente.
+6. **Supabase Storage:** Almacén seguro para archivos adjuntos de clientes, contratos firmados, remitos y grabaciones de audio de reuniones de Google Meet.
 
 ---
 
-## 02. Modelo de Datos y Esquema Firestore [roles: admin, superadmin]
-La base de datos Firestore está estructurada en colecciones raíz y subcolecciones relacionales optimizadas para lecturas masivas paralelas y búsquedas por iniciales.
+## 02. Modelo de Datos y Esquema Relacional PostgreSQL [roles: admin, superadmin]
+La base de datos opera sobre esquemas normalizados con índices optimizados y tipos de datos fuertemente tipados.
 
-```
-/usuarios/{uid}
-  ├── email (string)
-  ├── nombre (string)
-  ├── equipo (string)
-  ├── rol (string: superadmin | admin | supervisor | agente | lector | agente_cx | supervisor_cx)
-  └── capacitacion (map: estado [certificado | pendiente], ultimaFechaExamen [timestamp])
+```sql
+-- Tabla de Usuarios y Perfiles RBAC
+CREATE TABLE public.usuarios (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT UNIQUE NOT NULL,
+    nombre TEXT,
+    rol TEXT NOT NULL CHECK (rol IN ('superadmin', 'admin', 'supervisor', 'agente', 'lector', 'editor')),
+    equipo TEXT DEFAULT 'Global',
+    pais TEXT DEFAULT 'AR',
+    activo BOOLEAN DEFAULT true,
+    last_active_at TIMESTAMPTZ,
+    capacitacion JSONB DEFAULT '{}'::jsonb,
+    gmail_sync JSONB DEFAULT '{}'::jsonb,
+    estado_presencia TEXT DEFAULT 'desconectado',
+    presencia JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-/equipos/{equipoId}
-  ├── id (string)
-  └── nombre (string)
+-- Tabla de Clientes y Cuentas Corporativas
+CREATE TABLE public.clientes (
+    id TEXT PRIMARY KEY,
+    nombre_empresa TEXT NOT NULL,
+    cuit_rut_rfc TEXT,
+    industria TEXT,
+    sitio_web TEXT,
+    tamanio_empresa TEXT,
+    tier_cuenta TEXT DEFAULT 'Tier 3',
+    tier_override BOOLEAN DEFAULT false,
+    parent_company_id TEXT,
+    estado TEXT DEFAULT 'activo',
+    fase_manual TEXT,
+    pais TEXT NOT NULL,
+    comercial_email TEXT,
+    comercial_id UUID REFERENCES public.usuarios(id),
+    observaciones TEXT,
+    health_score NUMERIC DEFAULT 100,
+    campos_dinamicos JSONB DEFAULT '{}'::jsonb,
+    fecha_ingreso TIMESTAMPTZ DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-/config_secciones/{seccionId}
-  ├── id (string)
-  ├── nombre (string)
-  ├── icono (string)
-  ├── orden (number)
-  └── entidad (string: cliente | contrato | contacto | actividad)
+-- Tabla de Oportunidades Comerciales
+CREATE TABLE public.oportunidades (
+    id TEXT PRIMARY KEY,
+    cliente_id TEXT REFERENCES public.clientes(id) ON DELETE CASCADE,
+    nombre TEXT NOT NULL,
+    etapa TEXT NOT NULL,
+    monto_estimado_mensual NUMERIC DEFAULT 0,
+    valor_contrato_anual NUMERIC DEFAULT 0,
+    descuento_ofrecido_pct NUMERIC DEFAULT 0,
+    contacto_principal_id TEXT,
+    probabilidad NUMERIC DEFAULT 0,
+    fecha_estimada_cierre TIMESTAMPTZ,
+    fecha_ultimo_cambio_etapa TIMESTAMPTZ,
+    competidor_ganador TEXT,
+    perdida_razon TEXT,
+    perdida_detalle TEXT,
+    comercial_email TEXT,
+    comercial_id UUID REFERENCES public.usuarios(id),
+    pais TEXT NOT NULL,
+    tipo_pipeline TEXT DEFAULT 'adquisicion',
+    tipo_servicio TEXT,
+    campos_dinamicos JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-/config_campos/{campoId}
-  ├── id (string)
-  ├── key (string)
-  ├── nombre (string)
-  ├── tipo (string: text | number | select | checkbox | date | file)
-  ├── seccionId (string)
-  ├── orden (number)
-  ├── opciones (array of strings)
-  ├── origenDatos (string: manual | servicios | usuarios | clientes)
-  ├── obligatorio (boolean)
-  └── generaAlerta (boolean)
-
-/config_onboarding/{hitoId}
-  ├── id (string)
-  ├── titulo (string)
-  ├── orden (number)
-  ├── evidenciaObligatoria (boolean)
-  ├── paises (array: ['Global'] o códigos de país)
-  └── servicios (array: ['Global'] o IDs de servicio)
-
-/clientes/{clienteId}
-  ├── nombre (string)
-  ├── pais (string: PE | MX | CL | CO | AR)
-  ├── faseComercial (string: adquisicion | retencion | onboarding | activo)
-  ├── comercialId (string)
-  ├── searchTokens (array: iniciales y variaciones para Luxia Search)
-  ├── healthScore (number: 0-100)
-  ├── lastUpdated (timestamp)
-  ├── /contratos/{contratoId}
-  │     ├── nombre (string)
-  │     ├── monto (number: moneda local)
-  │     ├── moneda (string)
-  │     ├── montoUSD (number)
-  │     ├── fechaInicio (timestamp)
-  │     ├── fechaVencimiento (timestamp)
-  │     ├── renovacionAutomatica (boolean)
-  │     ├── alertaDiasAnticipacion (number)
-  │     └── version (number)
-  ├── /onboarding/{hitoId}
-  │     ├── completado (boolean)
-  │     ├── fechaCompletado (timestamp)
-  │     ├── evidenciaUrl (string)
-  │     └── responsableEmail (string)
-  └── /interacciones/{interaccionId}
-        ├── tipo (string: email | whatsapp | nota | meet)
-        ├── contenido (string)
-        ├── autor (string)
-        ├── timestamp (timestamp)
-        └── esSusurro (boolean)
-
-/contactos/{contactoId}
-  ├── clienteId (string)
-  ├── leadId (string opcional)
-  ├── oportunidadId (string opcional)
-  ├── nombre (string)
-  ├── correo / email (string)
-  ├── telefono (string)
-  ├── cargo / puesto (string)
-  ├── linkedin (string: URL del perfil profesional de LinkedIn)
-  ├── referidoPorNombre (string opcional)
-  ├── referidoPorEmail (string opcional)
-  ├── recibirInformacion (boolean)
-  └── camposDinamicos (map)
-
-/oportunidades/{oportunidadId}
-  ├── nombre (string)
-  ├── clienteId (string)
-  ├── comercialEmail (string)
-  ├── division (string: adquisicion | retencion)
-  ├── tipoServicio (string)
-  ├── etapaId (string)
-  ├── montoEstimadoMensual (number)
-  ├── moneda (string)
-  ├── montoUSD (number)
-  └── fechaEstimadaCierre (timestamp)
-
-/config_general/pipeline_config
-  ├── {pipelineId}_{serviceId} (map)
-  │     ├── stages (array of maps: id, label, orden, probabilidad)
-  │     ├── formFields (array of strings)
-  │     └── gatekeeping (map: stageId -> array of required field keys)
-  └── lossReasons (array of maps: id, label, active, orden)
+-- Tabla de Contratos y Acuerdos Comerciales
+CREATE TABLE public.contratos (
+    id TEXT PRIMARY KEY,
+    cliente_id TEXT NOT NULL REFERENCES public.clientes(id) ON DELETE CASCADE,
+    monto NUMERIC NOT NULL,
+    moneda TEXT NOT NULL,
+    es_contrato_vigente BOOLEAN DEFAULT true,
+    fecha_inicio DATE NOT NULL,
+    fecha_vencimiento DATE NOT NULL,
+    modalidad_pago TEXT,
+    renovacion_automatica BOOLEAN DEFAULT false,
+    alerta_dias_anticipacion INTEGER DEFAULT 30,
+    version INTEGER DEFAULT 1,
+    archivo_url TEXT,
+    campos_dinamicos JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
 ```
 
 ---
 
 ## 03. Autenticación y Matriz de Permisos RBAC [roles: admin, superadmin]
-El control de accesos del CRM-Luxia aplica políticas estrictas de Zero-Trust basadas en privilegios de perfil de usuario.
+El control de acceso descansa sobre 6 roles oficiales del sistema:
 
-### Estructura de claims JWT y validación
-Al iniciar sesión, Firebase Auth evalúa el documento `/usuarios/{uid}`. Si el rol es modificado, las Cloud Functions asignan Custom Claims al token JWT:
-```javascript
-// Cloud Function Trigger: onUserRoleChange
-await admin.auth().setCustomUserClaims(uid, {
-  role: newRole,
-  isAdmin: ['admin', 'superadmin'].includes(newRole),
-  isSupervisor: ['supervisor', 'supervisor_cx', 'admin', 'superadmin'].includes(newRole)
-});
-```
-
-### Reglas de Seguridad de Firestore (Security Rules)
-Las reglas restringen el acceso a los datos según las claims del token. Ejemplo de aislamiento comercial:
-```javascript
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /clientes/{clienteId} {
-      allow read: if request.auth != null && (
-        request.auth.token.isAdmin == true ||
-        resource.data.comercialId == request.auth.uid ||
-        (request.auth.token.isSupervisor == true && resource.data.pais == request.auth.token.pais)
-      );
-      allow write: if request.auth != null && request.auth.token.role != 'lector';
-    }
-  }
-}
-```
-
-### Ámbitos de Visibilidad de Datos Dinámicos (Data Scopes)
-Para garantizar la segregación y granularidad en el acceso a nivel de registros (filas), el CRM implementa un sistema de **Ámbitos de Visibilidad (Data Scopes)**. La configuración se almacena en la propiedad `scopes` del documento `/config_permisos/rol_matrix`:
-*   **`ALL`**: Permite la visualización de la totalidad de registros de la entidad.
-*   **`TEAM`**: Limita la lectura a registros pertenecientes al mismo equipo organizativo (ej: `adquisicion` o `retencion`), normalizados vía Unicode NFD.
-*   **`OWN`**: Limita la lectura estrictamente a registros donde el usuario logueado figure como el comercial asignado o creador.
-*   **`NONE`**: Denegación completa de visibilidad.
-
-La resolución se ejecuta transversalmente en:
-1.  **Frontend (Contexto React):** El proveedor `UserRoleContext` expone `getDataScope(entityKey)`, inyectando filtros reactivos en las consultas locales de Firestore.
-2.  **Carga Masiva (`BulkImportModal.jsx`):** Durante la pre-validación de filas del CSV, se evalúa el ámbito del usuario para rechazar registros asignados a comerciales de otros equipos (`TEAM`) o a correos distintos del operador (`OWN`).
-3.  **Backend (Cloud Functions):** La función `/exportarDatos` lee dinámicamente `/config_permisos/rol_matrix` en el servidor para aplicar las restricciones de visibilidad de filas en las consultas a nivel de nube antes de construir el archivo comprimido.
-
-### Control de Inactividad y Desconexión
-La desconexión automática es gestionada en el frontend por `AgentPresenceMonitor.jsx`. Configura listeners locales para capturar eventos de mouse, teclado o interacción táctil (`mousemove`, `keydown`, `touchstart`). Si transcurre el tiempo parametrizado en `/config_general/security_config` sin eventos, destruye la sesión y el token de Firebase Auth. Si el modal de confirmación está abierto, los listeners se apagan, requiriendo un clic consciente del operador para reactivar la sesión y evitando clicks accidentales.
-
-### Invariante Arquitectónica: Asignación del Equipo Global para Administradores
-Por especificación de arquitectura y control de acceso regional, la asignación de equipo para roles administrativos cumple la siguiente restricción formal:
-$$\text{Rol} \in \{\text{admin}, \text{superadmin}\} \implies \text{Equipo} = \text{'Global'}$$
-
-Esta regla se garantiza en tres capas del sistema:
-1. **Frontend (`UsersConfigPanel.jsx`):** El selector de equipo se bloquea y se fuerza a `Global` reactivamente al seleccionar o editar un usuario a los roles `admin` o `superadmin`.
-2. **Ciclo de Vida de Autenticación (`App.jsx`):** La migración de datos legados y la activación diferida de invitaciones (*Lazy Activation*) forzan el atributo `equipo: 'Global'` en el documento `/usuarios/{uid}` al detectar un rol administrativo.
-3. **Auditoría de Base de Datos (`enforce-admin-global-team.cjs`):** Script de migración server-side que corrige y mantiene la consistencia en las colecciones `/usuarios` e `/invitaciones`.
+| Rol | Identificador | Nivel de Privilegios | Data Scope Típico |
+| :--- | :--- | :--- | :--- |
+| **SuperAdmin** | `superadmin` | Acceso irrestricto, configuración de seguridad, RLS, prompts de IA y observabilidad. | `ALL` (Global) |
+| **Administrador** | `admin` | Gestión de catálogo de servicios, campos dinámicos, usuarios e integraciones. | `ALL` (Global) |
+| **Supervisor** | `supervisor` | Coordinación de equipo comercial, asignaciones masivas y aprobación de hitos. | `TEAM` (Equipo Asignado) |
+| **Agente Comercial** | `agente` | Gestión operativa a campo de leads, oportunidades y cuentas asignadas. | `OWN` (Propio) |
+| **Editor** | `editor` | Edición operativa de oportunidades, contratos y avance de hitos de onboarding. | `ALL` o `TEAM` |
+| **Lector** | `lector` | Visualización y auditoría de dashboards y reportes en modo solo lectura. | `ALL` (Solo Lectura) |
 
 ---
 
 ## 04. Motor de Inteligencia Artificial (Luxia Engine) [roles: admin, superadmin]
-El CRM integra la API de Google Gemini para tareas de análisis, scoring, traducción y corrección.
+El subsistema de IA está integrado en el backend mediante `server/services/luxiaCore.js`:
 
-### Arquitectura de Agentes Luxia
-1.  **Luxia Lead Scorer:** Ejecuta la calificación IA de leads. Compara la información corporativa y transcripciones de la primera llamada con el ICP configurado. Retorna obligatoriamente un JSON plano sin comillas Markdown:
-    ```json
-    {
-      "score": 85,
-      "prioridad": "Green",
-      "analisis_viabilidad": "Walmart cuenta con operaciones en Perú, un volumen proyectado alto y requiere integración vía API para colectas automatizadas.",
-      "proximos_pasos": [
-        "Agendar demo de integración API",
-        "Presentar propuesta de tarifas Tier 1"
-      ]
-    }
-    ```
-2.  **Luxia Risk Engine (Health Score):** Analiza la bitácora de interacciones de los últimos 60 días, tickets abiertos en CX, estados de onboarding y vigencia de contratos. Ejecuta una agregación weighted y corrección con Gemini para justificar variaciones.
-3.  **Luxia Architect (Metrics Studio):** Traduce instrucciones en lenguaje natural en consultas y agregaciones estructuradas para el dashboard de KPIs.
-    *   *Few-Shot Context:* RAG técnico de estructuras de colecciones Firestore para evitar consultas inválidas.
-    *   *Payload de Definición de KPI:*
-        ```json
-        {
-          "id": "kpi_12345",
-          "nombre": "Volumen de Tratos Ganados en Perú",
-          "collection": "oportunidades",
-          "queryConfig": {
-            "filters": [
-              { "field": "etapaId", "operator": "==", "value": "ganado" },
-              { "field": "pais", "operator": "==", "value": "PE" }
-            ],
-            "aggregation": "sum",
-            "fieldToAggregate": "montoUSD"
-          },
-          "chartType": "bar",
-          "status": "active"
-        }
-      ```
-4.  **Triage de Bitácora:** Filtra interacciones salientes antes de procesar por el Risk Engine para evitar sobrefacturación en llamadas de IA eliminando saludos e información vacía.
-
-### Módulo FinOps & Presupuesto IA (Circuit Breaker)
-Al ejecutarse cualquier Cloud Function de IA (`supportAgent`, `luxiaScorer`, etc.), se incrementa de forma transaccional el costo del token consumido en `/config_ia/luxia_usage`.
-*   *Lógica del Circuit Breaker:*
-    ```javascript
-    const usageRef = db.collection("config_ia").doc("luxia_usage");
-    const usageDoc = await usageRef.get();
-    if (usageDoc.exists) {
-      const usage = usageDoc.data();
-      if (usage.autoshutoffActive && usage.accumulatedCostUsd >= usage.budgetLimitUsd) {
-        // Circuit Breaker Activo
-        await usageRef.update({ disabledByBudget: true });
-        throw new Error("Presupuesto mensual agotado. Servicios de IA suspendidos.");
-      }
-    }
-    ```
+1. **Luxia Sentinel Engine (Health Score):** Analiza la bitácora de interacciones, mora en cuentas, vencimiento de contratos y cumplimiento de volumen. Computa un puntaje ponderado de 0 a 100 con clasificación semafórica:
+   - 🟢 **Green (75-100 pts):** Cuenta saludable y al día.
+   - 🟡 **Yellow (40-74 pts):** Señales preventivas de riesgo financiero o demoras moderadas.
+   - 🔴 **Red (0-39 pts):** Riesgo crítico de Churn o facturas vencidas >60 días.
+2. **Luxia Lead Scorer:** Pondera la idoneidad firmográfica de prospectos en el buzón de entrada recomendando el Tier comercial adecuado.
+3. **Luxia Exam Evaluator:** Corrige las respuestas a casos prácticos en el módulo de capacitación, generando devoluciones pedagógicas inmediatas.
 
 ---
 
 ## 05. Sub-Sistemas de Integración y Webhooks [roles: admin, superadmin]
-Orquestación e intercambio de datos con integraciones externas y APIs.
 
-### WhatsApp Business API Webhooks (Debouncing y Búfer)
-Para mitigar la carga de escrituras simultáneas en Firestore por chats activos, la Cloud Function `/whatsappWebhook` implementa un buffer temporal de mensajes (debouncing de 3 segundos por remitente). Acumula los mensajes entrantes en memoria local antes de insertar un documento consolidador en la subcolección `/interacciones` del cliente.
+### Ingesta B2B (Inbound REST API)
+Todos los endpoints externos autenticados requieren la cabecera:
+`Authorization: Bearer <API_KEY>` o `x-api-key: <API_KEY>`
 
-### Google Meet Integración & Grabadora HTML5
-*   *Consentimiento Legal:* La creación de la llamada exige pasar el flag `legalConsentGiven: true` en el payload.
-*   *Grabación Directa en Cliente:* Para cuentas Workspace Starter sin API de grabación nativa, el CRM inyecta un módulo local WebRTC. Captura el stream de audio del micrófono y del sistema mediante `MediaRecorder` de HTML5 y transmite fragmentos binarios (Chunks) a Firebase Cloud Storage al finalizar la sesión.
-*   *Transcripción diarizada:* La Cloud Function activa el servicio Speech-to-Text de Google Cloud configurando `diarizationConfig` para separar las intervenciones del comercial y del cliente.
+* `POST /api/v1/leads`: Alta automatizada de prospectos calificados.
+* `POST /api/v1/clientes`: Sincronización bidireccional con sistemas ERP (SAP, Tango, Oracle).
+* `POST /api/v1/contratos`: Registro formal de contratos comerciales.
 
-### Consola de APIs & Seguridad de Webhooks Salientes
-*   **Firma Criptográfica HMAC-SHA256:** Cada llamada de webhook saliente (Outbound Webhooks) hacia sistemas del cliente incluye un encabezado de firma `X-Luxia-Signature` generado mediante la clave secreta configurada.
-    *   *Cálculo de firma (Node.js):*
-        ```javascript
-        const crypto = require('crypto');
-        const signature = crypto
-          .createHmac('sha256', clientWebhookSecret)
-          .update(JSON.stringify(payload))
-          .digest('hex');
-        ```
+### Webhooks Salientes (Outbound Webhooks)
+El sistema despacha eventos en tiempo real con firma criptográfica HMAC-SHA256 en la cabecera `X-Luxia-Signature` ante los eventos:
+* `lead.created` / `lead.qualified`
+* `opportunity.stage_changed` / `opportunity.won`
+* `contract.signed` / `contract.expiring_soon`
+* `client.health_critical`
 
 ---
 
-## 06. Sincronización de Base de Conocimientos & CI/CD [roles: admin, superadmin]
-Automatización y despliegue continuo de la base de conocimientos maestra de CRM-Luxia.
-
-```
-                  [ manual_operaciones.md ]
-                             │
-                             ▼
-  [ Scripts / migrate-manuals-to-firestore.cjs ] ──> Parsea tags [roles: ...]
-                             │
-                             ▼
-                [ Firestore Collections ]
-    /documentacion_maestra/manual_operaciones/secciones
-                             │
-                             ▼
-         [ Cloud Function: supportAgent.js ] ──> Inyecta rol del usuario
-                             │
-                             ▼
-                    [ Gemini 2.5 API ]
-```
-
-1.  **Fase de CI/CD (Subida de Manuales):** El script `migrate-manuals-to-firestore.cjs` es ejecutado tras cada despliegue de software o manualmente por el administrador. Parsea el archivo `manual_operaciones.md`, separando las secciones por los encabezados `##` y leyendo el contenido en Markdown limpio. Almacena las secciones en documentos individuales ordenados por el campo `orden` e inyecta el array de `roles` extraído.
-2.  **Fase de Ingestión en supportAgent:** La Cloud Function carga dinámicamente todas las secciones de `/documentacion_maestra/manual_operaciones/secciones` y `/documentacion_maestra/referencia_tecnica/secciones` y concatena sus contenidos. Inyecta este contexto en la instrucción de sistema de Gemini junto con el rol de usuario recuperado en caliente, garantizando que el Soporte IA sea dinámicamente consciente de los permisos de quien consulta.
-3.  **Fase de Sincronización Vectorial RAG (Hot Sync & Hash Validation):** La Cloud Function Callable `syncRagEmbeddings` realiza un barrido en caliente de los manuales en Firestore:
-    *   Genera un hash SHA-256 a partir del contenido consolidado de todas las secciones.
-    *   Compara este hash con `lastHash` en `/config_ia/rag_status`. Si son idénticos, devuelve `{ success: true, updated: false }` para abortar la indexación a coste cero.
-    *   Si hay cambios, regenera los embeddings llamando al modelo `gemini-embedding-2`, limpia la colección `/documentacion_embeddings`, inserta los nuevos fragmentos vectorizados en lotes atómicos y actualiza `/config_ia/rag_status`.
-4.  **Auditor KB Dinámico (`onNegativeFeedbackCreated`):** Trigger de base de datos que se activa ante un feedback negativo del usuario. Carga en caliente la configuración del agente desde `/config_ia/luxia_ia_auditor`, resuelve el modelo activo mediante `/config_ia_modelos` y formatea dinámicamente los marcadores de posición `{{originalInput}}`, `{{generatedOutput}}` y `{{correctedContent}}` en la instrucción del sistema antes de invocar a Gemini.
+## 06. Sincronización de Base de Conocimientos & RAG [roles: admin, superadmin]
+La base de conocimiento de la plataforma se sincroniza automáticamente en la tabla `config_general` de PostgreSQL. El agente de soporte interactivo (`/api/soporte-agent`) utiliza estos manuales como fuente canónica de verdad (grounding estricto) para responder las consultas de los usuarios sin inventar funcionalidades.

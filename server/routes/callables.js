@@ -78,6 +78,20 @@ router.post('/evaluar-examen', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Examen no encontrado para calificar.' });
   }
 
+  // P4-3 FIX: Rate limit de intentos de examen por usuario (máximo 5 intentos por 24h)
+  const hace24Horas = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count: intentosRecientes } = await supabase
+    .from('examenes_intentos')
+    .select('id', { count: 'exact', head: true })
+    .eq('usuario_id', user.id)
+    .gte('created_at', hace24Horas);
+
+  if (intentosRecientes && intentosRecientes >= 5) {
+    return res.status(429).json({
+      error: 'Has alcanzado el límite de intentos de examen en 24 horas (5). Por favor repasa el material e intenta nuevamente mañana.'
+    });
+  }
+
   // 1. Calificar Teórico (Backend Fuente de Verdad)
   let aciertos = 0;
   const totalPreguntas = (examen.teorico || []).length;
@@ -363,11 +377,22 @@ router.post('/usuarios/invitar', requireAuth, async (req, res) => {
     let targetUserId = authData?.user?.id;
 
     if (authErr) {
-      // Si el usuario ya existe en auth.users, buscar su ID
-      if (authErr.message && authErr.message.includes('already been registered')) {
-        const { data: existingUsers } = await supabase.auth.admin.listUsers();
-        const found = (existingUsers?.users || []).find(u => u.email === emailClean);
-        if (found) targetUserId = found.id;
+      // Si el usuario ya existe en auth.users, buscar su ID de forma eficiente
+      if (authErr.message && (authErr.message.includes('already been registered') || authErr.message.includes('already exists'))) {
+        // 1. Buscar en public.usuarios (indexado)
+        const { data: uFound } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('email', emailClean)
+          .maybeSingle();
+        if (uFound) {
+          targetUserId = uFound.id;
+        } else {
+          // 2. Fallback controlado en auth.users
+          const { data: existingUsers } = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 });
+          const found = (existingUsers?.users || []).find(u => u.email === emailClean);
+          if (found) targetUserId = found.id;
+        }
       } else {
         throw authErr;
       }
