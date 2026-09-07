@@ -801,6 +801,94 @@ h1, h2, h3, h4, h5, h6, .brand-logo, .kpi-number, .apple-title {
   color: var(--apple-text-tertiary) !important;
 }
 
+/* ============================================================================
+   APPLE INTEGRATED INPUT GROUPS (Unified Focus Ring & Seamless Borders)
+   ============================================================================ */
+.apple-input-group {
+  display: flex;
+  align-items: center;
+  background-color: var(--apple-surface-elevated);
+  border: 1px solid var(--apple-border);
+  border-radius: var(--apple-radius-sm);
+  transition: all var(--apple-transition-fast);
+  overflow: hidden;
+  position: relative;
+}
+
+.apple-input-group:focus-within {
+  border-color: var(--apple-blue) !important;
+  box-shadow: 0 0 0 3.5px var(--apple-blue-light) !important;
+}
+
+.apple-input-group .apple-input-icon-lead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 14px;
+  padding-right: 4px;
+  color: var(--apple-text-secondary);
+  font-size: 1.05rem;
+  transition: color var(--apple-transition-fast);
+  user-select: none;
+}
+
+.apple-input-group:focus-within .apple-input-icon-lead {
+  color: var(--apple-blue);
+}
+
+.apple-input-group .apple-input-field {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 10px 12px !important;
+  font-size: 0.9rem !important;
+  color: var(--apple-text-primary) !important;
+  outline: none !important;
+  min-width: 0;
+}
+
+.apple-input-group .apple-input-field::placeholder {
+  color: var(--apple-text-tertiary) !important;
+}
+
+.apple-input-group .apple-input-btn-action {
+  background: transparent;
+  border: none;
+  padding: 0 12px;
+  color: var(--apple-text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--apple-transition-fast);
+}
+
+.apple-input-group .apple-input-btn-action:hover {
+  color: var(--apple-text-primary);
+}
+
+/* Fix Bootstrap .input-group when used with .form-control */
+.input-group:focus-within {
+  border-radius: var(--apple-radius-sm);
+}
+
+.input-group > .input-group-text {
+  background-color: var(--apple-surface-elevated) !important;
+  border: 1px solid var(--apple-border) !important;
+  border-right: none !important;
+  border-top-left-radius: var(--apple-radius-sm) !important;
+  border-bottom-left-radius: var(--apple-radius-sm) !important;
+  color: var(--apple-text-secondary) !important;
+}
+
+.input-group > .form-control.border-start-0 {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-left: none !important;
+}
+
 /* Filter bar container */
 .filter-bar-premium {
   display: flex;
