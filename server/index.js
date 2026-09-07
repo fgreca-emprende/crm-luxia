@@ -169,4 +169,8 @@ app.listen(PORT, () => {
 
   // Inicializar Crons en segundo plano
   initCronJobs(supabase);
+
+  // [P1-02 FIX] Inicializar Worker de Cola de IA Persistente
+  const { initAiQueueWorker } = require('./services/aiQueueWorker');
+  initAiQueueWorker(supabase);
 });

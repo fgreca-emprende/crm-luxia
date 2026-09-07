@@ -256,7 +256,7 @@ router.post('/exportar-datos', requireAuth, async (req, res) => {
 
   // Aplicar Data Scopes según el rol si no es administrador
   if (!['superadmin', 'admin'].includes(userRole)) {
-    if (['supervisor', 'supervisor_cx'].includes(userRole)) {
+    if (userRole === 'supervisor') {
       // Supervisor: miembros de su mismo equipo
       const { data: teamUsers } = await supabase
         .from('usuarios')
@@ -324,6 +324,13 @@ router.post('/usuarios/invitar', requireAuth, async (req, res) => {
   const supabase = req.app.get('supabase');
   const requestingUser = req.user;
 
+  const validRoles = ['superadmin', 'admin', 'supervisor', 'agente', 'lector', 'editor'];
+  const targetRole = (rol || 'agente').toLowerCase();
+
+  if (!validRoles.includes(targetRole)) {
+    return res.status(400).json({ error: `Rol inválido. Roles permitidos: ${validRoles.join(', ')}` });
+  }
+
   if (!email || !email.includes('@')) {
     return res.status(400).json({ error: 'Correo electrónico válido es requerido.' });
   }
@@ -337,6 +344,11 @@ router.post('/usuarios/invitar', requireAuth, async (req, res) => {
 
   if (!requesterProfile || !['admin', 'superadmin'].includes(requesterProfile.rol)) {
     return res.status(403).json({ error: 'No tienes permisos de administrador para invitar usuarios.' });
+  }
+
+  // [SEC-02 FIX] Prevención de Escalación de Privilegios: Solo superadmin puede crear/invitar roles admin o superadmin
+  if (['admin', 'superadmin'].includes(targetRole) && requesterProfile.rol !== 'superadmin') {
+    return res.status(403).json({ error: 'Solo un Superadmin puede asignar roles de administrador o superadministrador.' });
   }
 
   try {

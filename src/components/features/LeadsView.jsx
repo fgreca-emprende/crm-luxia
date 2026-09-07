@@ -361,56 +361,24 @@ export function LeadsView({ selectedCountry }) {
     if (!hasPermission('calificar_lead') || !selectedLead) return;
     setSaving(true);
     try {
-      const clientDocId = `lead_converted_${selectedLead.id}`;
-      
-      // 1. Crear el cliente
-      await supabase.from('clientes').insert({
-        id: clientDocId,
-        nombre_empresa: selectedLead.nombreEmpresa,
-        cuit_rut_rfc: selectedLead.cuit_rut_rfc || null,
-        industria: selectedLead.industria || null,
-        sitio_web: selectedLead.sitioWeb || null,
-        tamanio_empresa: selectedLead.tamanioEmpresa || null,
-        estado: 'Onboarding',
-        observaciones: `Cliente convertido del Lead calificado: ${selectedLead.nombreContacto}. ${selectedLead.notas || ''}`,
-        comercial_email: selectedLead.asignadoA || user?.email || 'admin@luxia.com',
-        pais: selectedLead.pais,
-        campos_dinamicos: {}
+      // [DAT-01 FIX] Conversión Atómica Transaccional vía PostgreSQL RPC
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('convertir_lead_a_cliente', {
+        p_lead_id: selectedLead.id,
+        p_nombre_empresa: selectedLead.nombreEmpresa,
+        p_cuit_rut_rfc: selectedLead.cuit_rut_rfc || null,
+        p_industria: selectedLead.industria || null,
+        p_sitio_web: selectedLead.sitioWeb || null,
+        p_tamanio_empresa: selectedLead.tamanioEmpresa || null,
+        p_pais: selectedLead.pais || 'PE',
+        p_comercial_email: selectedLead.asignadoA || user?.email || 'admin@luxia.com',
+        p_nombre_oportunidad: convertForm.nombreOportunidad || `Oportunidad: ${selectedLead.nombreEmpresa}`,
+        p_monto_estimado_mensual: Number(convertForm.montoEstimadoMensual) || 0,
+        p_etapa_oportunidad: convertForm.etapa || 'diagnostico'
       });
 
-      // 2. Asociar el contacto existente
-      await supabase.from('contactos').insert({
-        cliente_id: clientDocId,
-        lead_id: selectedLead.id,
-        nombre: selectedLead.nombreContacto,
-        email: selectedLead.correo,
-        telefono: selectedLead.telefono,
-        puesto: 'Contacto Comercial Principal'
-      });
+      if (rpcError) throw rpcError;
 
-      // 3. Crear la oportunidad
-      const opCurrency = getCountryCurrency(selectedLead.pais);
-      const montoEstimado = Number(convertForm.montoEstimadoMensual) || 0;
-
-      await supabase.from('oportunidades').insert({
-        cliente_id: clientDocId,
-        nombre: convertForm.nombreOportunidad,
-        etapa: convertForm.etapa,
-        monto_estimado_mensual: montoEstimado,
-        probabilidad: convertForm.etapa === 'diagnostico' ? 20 : (convertForm.etapa === 'propuesta' ? 50 : 80),
-        comercial_email: selectedLead.asignadoA || user?.email || 'admin@luxia.com',
-        pais: selectedLead.pais,
-        tipo_pipeline: 'adquisicion',
-        tipo_servicio: 'default',
-        campos_dinamicos: {}
-      });
-
-      // 4. Actualizar estado del lead
-      await supabase.from('leads').update({
-        estado: 'ganado'
-      }).eq('id', selectedLead.id);
-
-      showAlert('Lead convertido a Cliente y Oportunidad correctamente', 'success');
+      showAlert('Lead convertido a Cliente y Oportunidad exitosamente (Transacción Atómica)', 'success');
       setShowConvertModal(false);
       setSelectedLead(null);
       refresh();

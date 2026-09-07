@@ -129,6 +129,16 @@ export function OportunidadGestionModal({ show, onClose, oportunidadData, onSave
     loadMeta();
   }, [oportunidadData?.id, show]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && show && !saving && !deleting) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [show, saving, deleting, onClose]);
+
   if (!show || !oportunidadData) return null;
 
   const saveOportunidadData = async (triggerIA = false) => {
@@ -219,14 +229,22 @@ export function OportunidadGestionModal({ show, onClose, oportunidadData, onSave
   };
 
 
+
+
   return (
-    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-lg modal-fullscreen-md-down">
+    <div 
+      className="modal fade show d-block" 
+      role="dialog" 
+      aria-modal="true" 
+      aria-labelledby="modal-oportunidad-title" 
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+    >
+      <div className="modal-dialog modal-lg modal-fullscreen-md-down" role="document">
         <div className="modal-content glass-panel" style={{ position: 'relative' }}>
           {saving && <SpinnerPremium overlay={true} text="Guardando cambios..." />}
           <div className="modal-header border-bottom-0 pb-0">
-            <h5 className="modal-title">Oportunidad: {nombre}</h5>
-            <button type="button" className="btn-close" onClick={onClose}></button>
+            <h5 className="modal-title" id="modal-oportunidad-title">Oportunidad: {nombre}</h5>
+            <button type="button" className="btn-close" aria-label="Cerrar modal" onClick={onClose}></button>
           </div>
           
           <div className="px-3 pt-2">

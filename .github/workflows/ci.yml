@@ -37,3 +37,6 @@ jobs:
           VITE_SUPABASE_URL: 'http://localhost:8000'
           VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsaG9zdCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjIwMDAwMDAwMDB9.dummy'
         run: npm test
+
+      - name: Validate Production Build
+        run: npm run build

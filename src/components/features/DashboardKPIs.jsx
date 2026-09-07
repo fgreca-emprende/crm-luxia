@@ -320,7 +320,8 @@ export function DashboardKPIs({ selectedCountry, user }) {
 
     const fetchClientes = async () => {
       try {
-        let q = supabase.from('clientes').select('*');
+        // [PERF-01 FIX] Proyección optimizada de columnas necesarias para métricas en vez de select('*')
+        let q = supabase.from('clientes').select('id, pais, estado, comercial_email, health_score, fecha_ingreso, fase_manual, nombre_empresa, updated_at');
         if (clientScope === 'OWN') {
           q = q.eq('comercial_email', user.email);
         }
@@ -446,7 +447,8 @@ export function DashboardKPIs({ selectedCountry, user }) {
     try {
       const meta = clientMetadataRef.current;
 
-      let qContratos = supabase.from('contratos').select('*');
+      // [PERF-01 FIX] Proyección optimizada de campos en contratos
+      let qContratos = supabase.from('contratos').select('id, cliente_id, monto, moneda, es_contrato_vigente, fecha_fin, fecha_vencimiento, comercial_email');
       if (oportunidadesScope === 'OWN') {
         qContratos = qContratos.eq('comercial_email', user.email);
       }

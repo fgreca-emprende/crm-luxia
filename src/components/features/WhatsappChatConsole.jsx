@@ -360,8 +360,11 @@ export function WhatsappChatConsole({ clienteId, leadId, initialPhone }) {
         {/* SIDEBAR: CONTACT SELECTOR */}
         <div className="col-md-4 border-end bg-light h-100 d-flex flex-column" style={{ maxHeight: '520px' }}>
           <div className="p-3 border-bottom bg-white">
-            <h6 className="fw-bold mb-0 text-dark">Contactos de WhatsApp</h6>
-            <small className="text-muted mb-2 d-block">Selecciona una línea para chatear</small>
+            <div className="d-flex align-items-center justify-content-between mb-1">
+              <h6 className="fw-bold mb-0 text-dark">Contactos de WhatsApp</h6>
+              <span className="badge bg-secondary-subtle text-secondary border px-2 py-0" style={{ fontSize: '0.65rem' }}>TODO: Integración API Meta</span>
+            </div>
+            <small className="text-muted d-block" style={{ fontSize: '0.72rem' }}>Bitácora interna / Registro de mensajería (Conector directo en desarrollo)</small>
             
             {/* Buscador de contactos (Fase 1) */}
             <div className="input-group input-group-sm mt-2 shadow-sm rounded-pill overflow-hidden border">

@@ -70,9 +70,28 @@ function initCronJobs(supabase) {
     }
   });
 
+  // 3. [P3-OPS-01 FIX] Purga y retención automática de logs y telemetría (Cada domingo a las 3:00 AM)
+  cron.schedule('0 3 * * 0', async () => {
+    console.log('[CRON] Ejecutando purga semanal de logs y telemetría histórica...');
+    try {
+      const { data: res, error } = await supabase.rpc('purgar_logs_historicos', {
+        p_dias_retencion: 90
+      });
+
+      if (error) {
+        console.error('[CRON Purga Error]', error.message);
+      } else {
+        console.log('[CRON Purga Éxito] Registros purgados:', JSON.stringify(res?.registros_purgados));
+      }
+    } catch (cronErr) {
+      console.error('[CRON Purga Excepción]', cronErr);
+    }
+  });
+
   console.log('[CRON] Tareas programadas activas.');
 }
 
 module.exports = {
   initCronJobs
 };
+

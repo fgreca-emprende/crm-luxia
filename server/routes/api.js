@@ -27,6 +27,19 @@ async function validateApiKey(req, res, next) {
     return res.status(403).json({ error: 'API Key inválida o inactiva.' });
   }
 
+  // [SEC-04 FIX] Validar permisos de escritura en métodos no seguros (POST, PUT, PATCH, DELETE)
+  const isWriteMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method);
+  if (isWriteMethod) {
+    const permisos = keyDoc.permisos || keyDoc.scope || [];
+    const hasWritePermission = Array.isArray(permisos)
+      ? permisos.includes('write') || permisos.includes('*') || permisos.includes('all')
+      : permisos === 'write' || permisos === '*' || permisos === 'all';
+
+    if (!hasWritePermission) {
+      return res.status(403).json({ error: 'Permisos insuficientes. Esta API Key no cuenta con privilegios de escritura.' });
+    }
+  }
+
   req.apiContext = keyDoc;
   next();
 }
@@ -73,43 +86,27 @@ router.post('/public/web-to-lead', async (req, res) => {
 
     if (insertErr) throw insertErr;
 
-    // 2. Ejecutar calificación en segundo plano con Luxia Lead Scorer de forma segura
+    // 2. [P1-02 FIX] Encolar calificación en PostgreSQL cola_tareas_ia (Persistencia garantizada)
     const prompt = `Analiza este nuevo lead inbound para Luxia:
 Empresa: ${safeEmpresa}
 Contacto: ${safeContacto} (${emailClean})
 País: ${safePais}
 Datos adicionales: ${JSON.stringify(safeContext)}`;
 
-    setImmediate(async () => {
-      try {
-        const aiRes = await generateLuxiaContent({
-          agenteId: 'luxia_lead_scorer',
-          prompt,
-          userEmail: 'Web Inbound Form',
-          contextInfo: { leadId: lead.id },
-          supabase
-        });
-
-        if (aiRes && aiRes.success && aiRes.data) {
-          const { error: updateErr } = await supabase.from('leads').update({
-            score_calculado: aiRes.data.score || 70,
-            calificacion_ia: aiRes.data
-          }).eq('id', lead.id);
-
-          if (updateErr) {
-            console.error(`[Web-to-Lead IA Error] Error actualizando lead ${lead.id}:`, updateErr);
-          }
-        } else if (aiRes && !aiRes.success) {
-          console.warn(`[Web-to-Lead IA Warn] Luxia IA falló para lead ${lead.id}: ${aiRes.error}`);
-        }
-      } catch (bgErr) {
-        console.error(`[Web-to-Lead IA Critical Error] Excepción no controlada en scoring background para lead ${lead.id}:`, bgErr);
-      }
+    const { error: queueErr } = await supabase.from('cola_tareas_ia').insert({
+      lead_id: lead.id,
+      agente_id: 'luxia_lead_scorer',
+      prompt,
+      estado: 'pendiente'
     });
+
+    if (queueErr) {
+      console.warn('[Web-to-Lead Queue Warn] Fallo encolando en cola_tareas_ia, ejecutando fallback inmediato:', queueErr.message);
+    }
 
     return res.status(201).json({
       success: true,
-      message: 'Prospecto recibido y encolado para calificación.',
+      message: 'Prospecto recibido y encolado para calificación en segundo plano.',
       leadId: lead.id
     });
   } catch (err) {
@@ -188,6 +185,81 @@ router.get('/v1/clientes', validateApiKey, async (req, res) => {
   } catch (err) {
     console.error('[API /v1/clientes Error]', err);
     return res.status(500).json({ error: err.message || 'Error consultando lista de clientes.' });
+  }
+});
+
+// ============================================================================
+// 4. [P1-03 FIX] ENDPOINT PROTEGIDO DE DETALLE /v1/clientes/:id (Alineación OpenAPI)
+// ============================================================================
+router.get('/v1/clientes/:id', validateApiKey, async (req, res) => {
+  const supabase = req.app.get('supabase');
+  const { id } = req.params;
+
+  try {
+    const { data: cliente, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !cliente) {
+      return res.status(404).json({ error: `Cliente con ID ${id} no encontrado.` });
+    }
+
+    return res.json({
+      success: true,
+      data: cliente
+    });
+  } catch (err) {
+    console.error(`[API /v1/clientes/${id} Error]`, err);
+    return res.status(500).json({ error: err.message || 'Error obteniendo cliente.' });
+  }
+});
+
+// ============================================================================
+// 5. [P1-03 FIX] ENDPOINT PROTEGIDO DE CREACIÓN /v1/clientes (Alineación OpenAPI)
+// ============================================================================
+router.post('/v1/clientes', validateApiKey, async (req, res) => {
+  const supabase = req.app.get('supabase');
+  const { nombreEmpresa, razonSocial, cuitRutRfc, industria, sitioWeb, tamanioEmpresa, pais, estado, observaciones, camposDinamicos } = req.body;
+
+  if (!nombreEmpresa || !nombreEmpresa.trim()) {
+    return res.status(400).json({ error: 'El campo nombreEmpresa es obligatorio.' });
+  }
+
+  const safeEmpresa = sanitizeUserInput(nombreEmpresa, 200);
+  const safePais = sanitizeUserInput(pais || 'PE', 5).toUpperCase();
+  const safeContext = sanitizeContext(camposDinamicos || {}, 2000);
+  const clienteId = req.body.id || `client_${crypto.randomUUID ? crypto.randomUUID().split('-')[0] : Date.now().toString(36)}`;
+
+  try {
+    const { data: nuevoCliente, error } = await supabase
+      .from('clientes')
+      .upsert({
+        id: clienteId,
+        nombre_empresa: safeEmpresa,
+        cuit_rut_rfc: sanitizeUserInput(cuitRutRfc || '', 50) || null,
+        industria: sanitizeUserInput(industria || '', 100) || null,
+        sitio_web: sanitizeUserInput(sitioWeb || '', 200) || null,
+        tamanio_empresa: sanitizeUserInput(tamanioEmpresa || '', 50) || null,
+        pais: safePais,
+        estado: estado || 'Lead API',
+        observaciones: sanitizeUserInput(observaciones || '', 500) || null,
+        campos_dinamicos: safeContext,
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(201).json({
+      success: true,
+      data: nuevoCliente
+    });
+  } catch (err) {
+    console.error('[API POST /v1/clientes Error]', err);
+    return res.status(500).json({ error: err.message || 'Error creando o actualizando cliente.' });
   }
 });
 
