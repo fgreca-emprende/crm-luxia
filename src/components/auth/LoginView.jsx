@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { logSystemEvent } from '../../lib/telemetry';
 import { LuxiaLogo } from '../ui/LuxiaLogo';
 import { useToast } from '../ui/ToastProvider';
 
@@ -24,6 +25,43 @@ export function LoginView({ onLoginSuccess }) {
       }
 
       if (data?.user) {
+        const nowIso = new Date().toISOString();
+        const hoy = nowIso.split('T')[0];
+
+        // 1. Actualizar metadata de presencia y último login del usuario
+        try {
+          const { data: currentProfile } = await supabase
+            .from('usuarios')
+            .select('presencia')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+          const prevPresencia = currentProfile?.presencia || {};
+          await supabase.from('usuarios').update({
+            presencia: {
+              ...prevPresencia,
+              estado: 'disponible',
+              desdeIso: nowIso,
+              ultimo_login: nowIso
+            },
+            estado_presencia: 'Conectado',
+            updated_at: nowIso
+          }).eq('id', data.user.id);
+
+          // 2. Registrar en usuario_uso_diario
+          await supabase.from('usuario_uso_diario').upsert({
+            user_id: data.user.id,
+            fecha: hoy,
+            minutos_conectado: 1,
+            last_active_at: nowIso
+          }, { onConflict: 'user_id,fecha' });
+
+          // 3. Registrar evento de telemetría / auditoría
+          await logSystemEvent(data.user, 'login', { metodo: 'password' });
+        } catch (postLoginErr) {
+          console.warn('[Login Telemetry] Error registrando login:', postLoginErr);
+        }
+
         onLoginSuccess({ ...data.user, uid: data.user.id });
         showAlert(`Bienvenido ${data.user.email}`, 'success');
       }

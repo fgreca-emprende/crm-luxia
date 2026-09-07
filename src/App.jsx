@@ -410,10 +410,30 @@ function CRMAppContent({ user, setUser }) {
     if (now - lastUpdateRef.current > 3 * 60 * 1000) {
       lastUpdateRef.current = now;
       try {
+        const nowIso = new Date().toISOString();
+        const hoy = nowIso.split('T')[0];
+        const userId = user.uid || user.id;
+
         await supabase.from('usuarios').update({
-          updated_at: new Date().toISOString(),
+          updated_at: nowIso,
           estado_presencia: 'Conectado'
-        }).eq('id', user.uid || user.id);
+        }).eq('id', userId);
+
+        // Incrementar o registrar bloque de 3 minutos en usuario_uso_diario
+        const { data: currentUso } = await supabase
+          .from('usuario_uso_diario')
+          .select('minutos_conectado')
+          .eq('user_id', userId)
+          .eq('fecha', hoy)
+          .maybeSingle();
+
+        const currentMin = currentUso?.minutos_conectado || 0;
+        await supabase.from('usuario_uso_diario').upsert({
+          user_id: userId,
+          fecha: hoy,
+          minutos_conectado: currentMin + 3,
+          last_active_at: nowIso
+        }, { onConflict: 'user_id,fecha' });
       } catch (err) {
         console.error('Error updating activity heartbeat:', err);
       }

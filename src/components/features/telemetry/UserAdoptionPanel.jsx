@@ -122,8 +122,24 @@ export function UserAdoptionPanel({ user }) {
     setLoadingUso(true);
     const fetchUso = async () => {
       try {
-        const data = await getConfigGeneral('uso_diario');
-        setUsoDiarioLogs(Array.isArray(data) ? data : []);
+        // Consultar tabla relacional usuario_uso_diario con fallback a getConfigGeneral('uso_diario')
+        const { data: dbUso, error: dbError } = await supabase
+          .from('usuario_uso_diario')
+          .select('*');
+
+        if (!dbError && dbUso && dbUso.length > 0) {
+          const mappedUso = dbUso.map(u => ({
+            userId: u.user_id,
+            userUid: u.user_id,
+            fecha: u.fecha,
+            minutosConectado: Number(u.minutos_conectado) || 0,
+            lastActiveAt: u.last_active_at || u.fecha
+          }));
+          setUsoDiarioLogs(mappedUso);
+        } else {
+          const fallbackData = await getConfigGeneral('uso_diario');
+          setUsoDiarioLogs(Array.isArray(fallbackData) ? fallbackData : []);
+        }
       } catch (err) {
         console.warn("Error consultando uso diario:", err);
       } finally {
@@ -144,13 +160,16 @@ export function UserAdoptionPanel({ user }) {
           if (!email || !email.includes('@')) return;
           const currentName = u.nombre || '';
           const hasRealName = currentName && !currentName.includes('@');
+          const lastLogin = u.presencia?.ultimo_login || u.ultimo_login || u.lastLoginAt || u.updated_at || null;
+
           if (!temp[email] || (!temp[email].hasRealName && hasRealName)) {
             temp[email] = {
               id: u.id,
               ...u,
               email: email,
               nombre: u.nombre || email,
-              hasRealName: !!hasRealName
+              hasRealName: !!hasRealName,
+              lastLoginAt: lastLogin
             };
           }
         });
@@ -191,11 +210,10 @@ export function UserAdoptionPanel({ user }) {
           uid: c.id || c.uid || null,
           nombre: c.nombre || c.email,
           count: 0,
-          lastLoginAt: c.lastLoginAt || c.activatedAt || null
+          lastLoginAt: c.lastLoginAt || c.presencia?.ultimo_login || c.ultimo_login || c.updated_at || null
         };
       });
     }
-
 
     if (activeLogs && activeLogs.length > 0) {
       activeLogs.forEach(log => {
@@ -206,10 +224,14 @@ export function UserAdoptionPanel({ user }) {
             email: email,
             nombre: log.usuarioNombre || email,
             count: 0,
-            lastLoginAt: null
+            lastLoginAt: log.timestamp || null
           };
         }
         userMap[email].count += 1;
+        // Si el log es más reciente que el lastLoginAt registrado, actualizar
+        if (!userMap[email].lastLoginAt && log.timestamp) {
+          userMap[email].lastLoginAt = log.timestamp;
+        }
       });
     }
 
@@ -768,10 +790,11 @@ export function UserAdoptionPanel({ user }) {
                             {(() => {
                               const userMinutes = activeUsoLogs
                                 .filter(log => {
-                                  const logUser = (log.userEmail || '').toLowerCase().trim();
+                                  const logEmail = (log.userEmail || '').toLowerCase().trim();
+                                  const logId = (log.userId || log.userUid || '').toLowerCase().trim();
                                   const userEmail = (u.email || '').toLowerCase().trim();
                                   const userUid = (u.uid || '').toLowerCase().trim();
-                                  return logUser === userEmail || (userUid && logUser === userUid);
+                                  return (logEmail && logEmail === userEmail) || (logId && userUid && logId === userUid);
                                 })
                                 .reduce((acc, log) => acc + (log.minutosConectado || 0), 0);
                               return `${(userMinutes / 60).toFixed(1)} h`;
