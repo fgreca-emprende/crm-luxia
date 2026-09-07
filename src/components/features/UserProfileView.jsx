@@ -27,7 +27,6 @@ export function UserProfileView({
         } else {
           setEquipos([
             { id: '1', nombre: 'Ventas' },
-            { id: '2', nombre: 'CX' },
             { id: '3', nombre: 'Operaciones' },
             { id: '4', nombre: 'Dirección' }
           ]);
@@ -35,7 +34,6 @@ export function UserProfileView({
       } catch (err) {
         setEquipos([
           { id: '1', nombre: 'Ventas' },
-          { id: '2', nombre: 'CX' },
           { id: '3', nombre: 'Operaciones' }
         ]);
       }

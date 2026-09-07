@@ -183,7 +183,6 @@ export function BusinessConfigPanel({ user, mode }) {
       if (listEquipos.length === 0) {
         const defaultEquipos = [
           { id: 'Global', nombre: 'Global' },
-          { id: 'CX', nombre: 'CX (Atención al Cliente)' },
           { id: 'Adquisicion', nombre: 'Adquisición (Hunting)' },
           { id: 'Retencion', nombre: 'Retención (Farming)' },
           { id: 'Operaciones', nombre: 'Operaciones' }
@@ -351,8 +350,8 @@ export function BusinessConfigPanel({ user, mode }) {
   };
 
   const handleDeleteTeam = (id) => {
-    if (['Global', 'CX', 'Adquisicion', 'Retencion'].includes(id)) {
-      showAlert('Los equipos principales (Global, CX, Adquisición y Retención) están protegidos y no pueden eliminarse.', 'warning');
+    if (['Global', 'Adquisicion', 'Retencion'].includes(id)) {
+      showAlert('Los equipos principales (Global, Adquisición y Retención) están protegidos y no pueden eliminarse.', 'warning');
       return;
     }
     setTeamToDelete(id);
@@ -361,7 +360,7 @@ export function BusinessConfigPanel({ user, mode }) {
 
   const executeDeleteTeam = async () => {
     if (!teamToDelete) return;
-    if (['Global', 'CX', 'Adquisicion', 'Retencion'].includes(teamToDelete)) {
+    if (['Global', 'Adquisicion', 'Retencion'].includes(teamToDelete)) {
       showAlert('Los equipos principales están protegidos contra el borrado.', 'danger');
       setShowConfirmModal(false);
       setTeamToDelete(null);
@@ -814,8 +813,8 @@ export function BusinessConfigPanel({ user, mode }) {
                           type="button" 
                           className="btn btn-sm btn-outline-danger border-0 rounded-pill"
                           onClick={() => handleDeleteTeam(eq.id)}
-                          disabled={['Global', 'CX', 'Adquisicion', 'Retencion'].includes(eq.id)}
-                          title={['Global', 'CX', 'Adquisicion', 'Retencion'].includes(eq.id) ? "Equipo Protegido (No se puede eliminar)" : "Eliminar Equipo"}
+                          disabled={['Global', 'Adquisicion', 'Retencion'].includes(eq.id)}
+                          title={['Global', 'Adquisicion', 'Retencion'].includes(eq.id) ? "Equipo Protegido (No se puede eliminar)" : "Eliminar Equipo"}
                         >
                           <i className="bi bi-trash"></i>
                         </button>

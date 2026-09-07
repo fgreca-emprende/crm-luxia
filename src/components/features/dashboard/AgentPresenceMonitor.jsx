@@ -6,10 +6,10 @@ import { useToast } from '../../ui/ToastProvider';
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutos
 
 export function AgentPresenceMonitor({ 
-  targetTeam = 'CX', 
+  targetTeam = 'Global', 
   selectedCountry = '', 
   title = 'Monitor de Presencia & Disponibilidad del Turno',
-  icon = 'bi-headset',
+  icon = 'bi-people',
   showRoutingStatus = true 
 }) {
   const { canView, hasPermission, user } = useUserRole();

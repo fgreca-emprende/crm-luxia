@@ -42,7 +42,6 @@ export function DashboardKPIs({ selectedCountry, user }) {
         } else {
           setEquipos([
             { id: 'Global', nombre: 'Global' },
-            { id: 'CX', nombre: 'CX (Atención al Cliente)' },
             { id: 'Adquisicion', nombre: 'Adquisición (Hunting)' },
             { id: 'Retencion', nombre: 'Retención (Farming)' },
             { id: 'Administracion', nombre: 'Administración' },
